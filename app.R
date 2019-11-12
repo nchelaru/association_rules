@@ -271,7 +271,7 @@ shinyApp(
                            tabPanel(
                              tabName = "Table",
                              active = TRUE,
-                             box(width=12, collapsible=FALSE, DT::dataTableOutput("churn_rules", height = '77vh'))
+                             box(width=12, collapsible=FALSE, DT::dataTableOutput("churn_rules", height = '76vh'))
                            ),
                            tabPanel(
                              tabName = 'Plot',
