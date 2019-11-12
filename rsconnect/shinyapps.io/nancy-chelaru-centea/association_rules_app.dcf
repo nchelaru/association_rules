@@ -1,0 +1,13 @@
+name: association_rules_app
+title: association_rules_app
+username:
+account: nancy-chelaru-centea
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1457735
+bundleId: 2582161
+url: https://nancy-chelaru-centea.shinyapps.io/association_rules_app/
+when: 1573537384.94747
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: logo_blue.png|logo_full.png|logo_white.png|logo.png|Test-app.R
