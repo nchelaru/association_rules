@@ -3,11 +3,10 @@ library(shiny)
 library(gentelellaShiny)
 library(shinyWidgets)
 library(icon)
+library(data.table)
 library(DT)
 library(ggplot2)
 library(arulesViz)
-
-
 
 
 what <- HTML('<font size=3>Association rule mining is an approach to discovering patterns of co-occurrence 
@@ -36,7 +35,7 @@ what <- HTML('<font size=3>Association rule mining is an approach to discovering
              </font>')
 
 
-when <- HTML('<font size=3>Some <a href="https://www.slideshare.net/rdatamining/rdatamining-slidesassociationruleminingwithr">applications</a> of association rule mining:
+when <- HTML('<font size=3>Some <a href="https://www.slideshare.net/rdatamining/rdatamining-slidesassociationruleminingwithr"><link>applications</link></a> of association rule mining:
               <br><br>
               <ul style="list-style-type:circle;">
                 <li><b>Market basket analysis</b>:
@@ -71,7 +70,7 @@ when <- HTML('<font size=3>Some <a href="https://www.slideshare.net/rdatamining/
               </ul> 
               </font>')
 
-data_prep <- HTML("<div style='margin: 20px; font-size:16px;'>
+data_prep <- HTML("<div style='margin: 10px 15px 10px 15px;; font-size:16px;'>
                     In this microlearning series, we will perform association rule mining on the 
                   <a href='https://developer.ibm.com/patterns/predict-customer-churn-using-watson-studio-and-jupyter-notebooks/'>IBM Telco customer churn dataset</a>, 
                   to identify customer characteristics and purchasing behaviours that tend to appear together, 
@@ -107,25 +106,45 @@ data_prep <- HTML("<div style='margin: 20px; font-size:16px;'>
                   </div>
                   ")
 
-prep_code <- HTML(paste('<p style="font-size: 16px; margin: 20px;">This is the general workflow used for preparing the dataset and 
-                        creating a plot of the frequencies of customer characteristics and purchasing behaviours.</p>',
-                        '<div style="margin: 20px;"><script src="https://gist.github.com/nchelaru/7119cad617161ae209cddd64f7c28ac9.js"></script></div>'))
+prep_code <- HTML('<div style="margin: 20px;"><script src="https://gist.github.com/nchelaru/7119cad617161ae209cddd64f7c28ac9.js"></script></div>')
 
-rule_mining <- HTML('<p style="font-size: 16px; margin: 20px;">The Apriori algorithm is most commonly used for association rule mining. 
+rule_mining <- HTML("<div style='font-size: 17px; margin: 20px;'><p>
+                      The Apriori algorithm is most commonly used for association rule mining, which will also be used in this example. 
                       We can set various parameters to limit the number of rules created from the dataset, 
                       usually how often the rule is observed (<b>support</b>), how often it is true (<b>confidence</b>) 
-                      and the minimum/maximum length of the rule. 
+                      and the minimum/maximum length of the rule. As an example, we have generated association rules that 1) appear in at least 0.1% of customers, 
+                      2) holds true 90% of the time, and 3) contain 3-5 “items”. 
+                      
                       <br><br>
-                      As an example, we have generated association rules that appear in at least 0.1% of customers, 
-                      holds true 90% of the time, and contain 3-5 “items”. 
-                      <br><br>
-                      The number of rules obtained at this step will almost certainly be too numerous to provide insights. 
-                      We can further filter the rules by their <b>lift</b>, which is a measure of how much more or less likely 
-                      the items in a given rule appear together as compared to by chance. Therefore, it is a metric of the 
-                      importance of a rule. In addition, redundant and statistically insignificant rules should also be 
-                      removed to leave only the most informative ones. Finally, as we are most interested in customer churn,
-                      we can extract *only* the rules that contain "Churn" in the right-hand side.
-                      </p>')
+                      
+                      Nevertheless, the number of rules obtained at this step will almost certainly be too numerous to provide insights. 
+                      We can further filter the rules by several criteria:
+                      
+                      <ul style='list-style-type:circle;'>
+                        <li><b>Lift</b></li>
+                          <ul style='list-style-type:disc;'>
+                            <li> A measure of how much more or less likely the items in a given rule appear together as compared to by chance. </li>
+                            <li> Therefore, it is a metric of the <i>importance</i> of a rule. </li>
+                          </ul>
+                        <li><b>Redundance and statistical significance</b></li>
+                           <ul style='list-style-type:disc;'>
+                            <li> A rule is considered to be redundant if a more general rules with the same or a higher confidence exists</li>
+                            <li> Fisher's exact test with multiple comparisons correct is used to identify rules where the association between 
+                            items on the left-hand (LHS) and right-hand side (RHS) is statistically significant</li> 
+                           </ul>
+                        <li><b>Items of interest</b></li>
+                           <ul style='list-style-type:disc;'>
+                            <li>As in this example we are most interested in characteristics that are associated with customer churn, 
+                            we can extract <b>only</b> the rules that contain <code>Churn</code> in the RHS.</li>
+                          </ul>
+                        </ul>
+                        
+                      <br>
+                      
+                      The filtered rules can be viewed in a data table or plotted, as seen on the right. The <code>arulesViz</code> package offers 
+                      <i>many</i> different options for visualizing a given rule set (as you can see in the interactive app in the next tab), 
+                      but the circular grouped plot shown under the 'Plot' tab is one of the best for displaying a handful (~15) rules of particular interest.
+                    </p></div>")
 
 mining_code <- HTML('<script src="https://gist.github.com/nchelaru/25cdeb4d7f7b457ca3bf735dd595836e.js"></script>')
 
@@ -135,6 +154,24 @@ interpretation <- HTML('After all this is done, we can then convert the associat
                       whether it be transactions or customers, in which the rule appears. In our case, the
                       “count” of each rule divided by the total number of customers in the dataset equals its support.')
 
+
+about_msg <- HTML('<div style="font-size:15px; margin:15px;">
+                  This microlearning series is one of many that I have created for <b>Intelligence Refinery</b>, 
+                  a knowledge repository for all things data science and software development that I co-curate with Mihai Chelaru. 
+                  
+                  <br><br>
+                  
+                  While it is so important to keep 
+                  learning in order to keep pace with this fast moving field, we know that it is not easy to do with a busy
+                  schedule and many competing priorities. These microlearning series are designed to deliver bite-sized 
+                  concepts and code that build into full workflows that then can be applied to real problems. 
+                  
+                  <br><br>
+                  
+                  If you are interested in what else we have cooked up or want to drop us a line, 
+                  the links to Intelligence Refinery and my personal portfolio, The Perennial Beginner, are right below.
+                  </div>
+                  ')
 
 shinyApp(
   ui = gentelellaPageCustom(
@@ -238,12 +275,14 @@ shinyApp(
                     tabPanel(
                       tabName = "Description",
                       active = TRUE,
-                      data_prep
+                      box(data_prep, width = 12, collapsible = FALSE, 
+                          title = 'Prepare and explore data for association rule mining')
                     ),
                     tabPanel(
                       tabName = "Workflow",
                       active = FALSE,
-                      prep_code
+                      box(prep_code, width = 12, collapsible = FALSE, 
+                          title = 'General workflow')
                     )
                   )
                   
@@ -251,34 +290,44 @@ shinyApp(
         
         tabItem(tabName = "assn_rules",
                 fluidRow(
-                  column(width = 5,
+                  column(width = 6,
                          tabSetPanel(
                            id = "tabset2",
                            tabPanel(
                              tabName = "Summary",
                              active = TRUE,
-                             box(rule_mining, width = 12, collapsible = FALSE)
+                             box(rule_mining, width = 12, collapsible = FALSE, 
+                                 title = 'Creating and refining association rules')
                              ),
                            tabPanel(
                              tabName = 'Code',
                              active = FALSE,
-                              mining_code
+                              box(width=12, collapsible=FALSE, mining_code, 
+                                  title='General workflow for creating, filtering and visualizing association rules')
                            ))
                            ),
-                  column(width = 7,
+                  column(width = 6,
                          tabSetPanel(
+                           right=TRUE,
                            id = "tabset2",
-                           tabPanel(
-                             tabName = "Table",
-                             active = TRUE,
-                             box(width=12, collapsible=FALSE, DT::dataTableOutput("churn_rules", height = '76vh'))
-                           ),
                            tabPanel(
                              tabName = 'Plot',
                              active = FALSE,
-                             box(width=12, collapsible=FALSE, 
-                                 HTML('<center><img src="circ_plot.png"></center>'))
-                           ))
+                             box(width=12, height='1200px', collapsible=FALSE, 
+                                 title='The top 14 non-redundant and statistically significant churn rules with the highest support',
+                                 HTML(paste('<p style="font-size: 16px; margin:20px;"><b>Each circle represents an association rule that connects LHS and RHS items via arrows.</b></p>',
+                                            '<center><img src="circ_plot.png" height="135%"></center>')))
+                             
+                           ),
+                           tabPanel(
+                             tabName = "Table",
+                             active = TRUE,
+                             box(width=12, height='1200px', collapsible=FALSE, 
+                                 title='Customer characteristics and purchases associated with churn',
+                                 DT::dataTableOutput("churn_rules", height = '76vh'))
+                           )
+                           
+                           )
                          )
                 )),
         
@@ -289,9 +338,8 @@ shinyApp(
           fluidRow(
             column(
               width = 12,
-              "From arules package", 
               source('./arules_app.R')
-            ), height='80vh'
+            )
           )
         ),
         
@@ -299,19 +347,31 @@ shinyApp(
         tabItem(
           tabName = "about",
           fluidRow(
+            contactBox(about_msg, head_title = "Hi, I'm Nancy Chelaru!", main_title = NULL, 
+                       img = "https://octodex.github.com/images/andycat.jpg",
+                       footer_left = HTML('<a href="https://www.intelligencerefinery.io"><img src="https://i.ibb.co/889HCvZ/full-logo.png" alt="IntelRefinery" height=60 border="0"></a>'), 
+                       footer_right = HTML('<a href="https://nancychelaru.rbind.io"><img src="https://i.ibb.co/ysKpwRM/perennial-logo.png"  alt="Portfolio" height=60 border="0"></a>'),
+                       width=4),
             column(
-              width = 8,
+              width=3, 
+              box(
+                width = 12,
+                title = "To-dos",
+                quickList(collapsible=FALSE,
+                  quickListItem(icon = icon("calendar-o"), name = "Settings"),
+                  quickListItem(icon = icon("bars"), name = "Subscription")
+                )
+              )
+                   ),
+            column(
+              width = 5,
               timeline(
                 timelineItem("Change", title = "Introduction", url = "https://nancy-chelaru-centea.shinyapps.io/podcast_db/", date ="November 6, 2018",
                              author = "N. Chelaru", tag = NULL),
                 timelineItem("hellof", title = NULL, url = NULL, date = "November 29, 2019",
                              author = NULL, tag = NULL)
               )
-            ),
-            contactBox("hello", head_title = "test", main_title = "About this app", img = "https://octodex.github.com/images/andycat.jpg",
-                       footer_left = HTML(paste('<a href="https://www.intelligencerefinery.io"><img src="https://i.ibb.co/LzjJ6LL/logo-blue.png" alt="IntelRefinery" height=42></a>',
-                                                '<a href="https://www.intelligencerefinery.io"><img src="https://i.ibb.co/LzjJ6LL/logo-blue.png" alt="IntelRefinery" height=42></a>')), 
-                       footer_right = "left", width=5)
+            )
           )
         )
       )
@@ -342,13 +402,13 @@ shinyApp(
     output$item_freq <- renderPlot(p)
     
     ## Churn rules table
-    churn_rules <- read.csv('./churn_rules.csv')
+    churn_rules_df <- read.csv('./churn_rules.csv') %>% select(-count)  %>% mutate_if(is.numeric, round, 3)
 
-    output$churn_rules = DT::renderDataTable(within(churn_rules, rm('count')), options = list(pageLength = 15, scrollX = TRUE))
+    output$churn_rules <- DT::renderDataTable(churn_rules_df, 
+                                             options = list(pageLength = 15, 
+                                                            scrollX = TRUE,
+                                                            scrollY = TRUE)) 
 
-    
-    ## Circular grouped plot
- 
 
     
  

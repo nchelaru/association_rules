@@ -3,53 +3,41 @@ library(shinythemes)
 library(DT)
 library(data.table)
 library(arules)
-library(arulesCBA)
 library(arulesViz)
 library(plotly)
 library(plyr)
 library(dplyr)
 
-## Import data that has been cleaned up
-df <-read.csv("https://github.com/nchelaru/data-prep/raw/master/telco_cleaned_yes_no.csv")
-
-## Discretize "MonthlyCharges" with respect to "Churn"/"No Churn" label and assign to new column in dataframe
-df$Binned_MonthlyCharges <- discretizeDF.supervised(Churn ~ ., df[, c('MonthlyCharges', 'Churn')], method='mdlp')$MonthlyCharges
-
-## Rename the levels based on knowledge of min/max monthly charges
-df$Binned_MonthlyCharges = revalue(df$Binned_MonthlyCharges, 
-                                   c("[-Inf,29.4)"="$0-29.4", 
-                                     "[29.4,56)"="$29.4-56", 
-                                     "[56,68.8)"="$56-68.8", 
-                                     "[68.8,107)"="$68.8-107", 
-                                     "[107, Inf]" = "$107-118.75"))
-
-## Discretize "Tenure" with respect to "Churn"/"No Churn" label and assign to new column in dataframe
-df$Binned_Tenure <- discretizeDF.supervised(Churn ~ ., 
-                                            df[, c('Tenure', 'Churn')], 
-                                            method='mdlp')$Tenure
-
-## Rename the levels based on knowledge of min/max tenures
-df$Binned_Tenure = revalue(df$Binned_Tenure, 
-                           c("[-Inf,1.5)"="1-1.5m", 
-                             "[1.5,5.5)"="1.5-5.5m",
-                             "[5.5,17.5)"="5.5-17.5m",
-                             "[17.5,43.5)"="17.5-43.5m",
-                             "[43.5,59.5)"="43.5-59.5m",
-                             "[59.5,70.5)"="59.5-70.5m",
-                             "[70.5, Inf]"="70.5-72m"))
-
-## Replace "No"s with empty values
-df[df=="No"]<-NA
-
-df[] <- lapply(df, function(x) levels(x)[x])
-
-## Replace "Yes"s with the column name
-w <- which(df == "Yes", arr.ind = TRUE)
-
-df[w] <- names(df)[w[,"col"]]
-
-## Output to CSV
-write.csv(df, './final_df.csv', row.names=FALSE)
+app_instructions <- HTML(paste('<center><a href="https://iconscout.com/illustration/computer-vision-1533033"><img src="https://i.ibb.co/t3S8xtV/app.jpg" alt="app" border="0" height=250></a></center>',
+                        '<div style="font-size:18px; margin:20px;">
+                         Congratulations on getting here! By now, you should have a working understanding of the steps involved in 
+                         performing association rule mining to gain insights into co-occurrence patterns in a large dataset.
+                         
+                         <br><br>
+                         
+                         However, even after all the filtering, you are likely to end up with more association rules than one can 
+                         quite make sense of at a glance. No fear, this Shiny app for interactive visualizations of the rules
+                         has been created by Michael Hahsler, the author of the <code>arules</code> package. Where needed,
+                         this can even serve as a light-weight recommendation engine to be used in real time to suggest new 
+                         products or course of actions regarding a customer.
+                         
+                         <br><br>
+                         
+                         From the Telco customer churn dataset, we have obtained 1,704 association rules that fulfill our 
+                         various criteria of robustness, uniqueness, and statistical significance. Using the controls in the 
+                         side bar, you can specify the subset of rules of interest and progress through the next few tabs to
+                         visualize them. Two types of visualizations, out of the myriad available through the 
+                         <code>arulesViz</code> package, are chosen here as they provide the easiest overview of 
+                         the relationships between various customer characteristics and churn, our outcome of interest. Finally, 
+                         the rules of interest can be exported in a CSV file for further analysis.
+                         
+                         <hr>
+                         
+                         <i>Note: The app shown here is adapted from the original, so please see 
+                         the <a href="https://github.com/mhahsler/arules"><link>Github repo</link></a> for the <code>arules</code>
+                         package for the full source code.</i>
+                         
+                         </div>'))
 
 ## Convert dataframe to transaction format
 tData <- read.transactions('./final_df.csv', 
@@ -173,22 +161,27 @@ shiny::shinyApp(ui = shiny::shinyUI(
             shiny::mainPanel(
                 shiny::tabsetPanel(id='tabs',
                                    
-                                   shiny::tabPanel('Data Table', value='datatable',
-                                                   shiny::br(),
-                                                   DT::dataTableOutput("rulesDataTable")
+                                   shiny::tabPanel('Introduction', value='intro',
+                                                   app_instructions
                                    ),
                                    
-                                   shiny::tabPanel('Scatter', value='scatter',
-                                                   shiny::wellPanel(
-                                                       shiny::fluidRow(
-                                                           shiny::column(3, shiny::uiOutput("xAxisSelectInput")),
-                                                           shiny::column(3, shiny::uiOutput("yAxisSelectInput")),
-                                                           shiny::column(3, shiny::uiOutput("cAxisSelectInput")),
-                                                           shiny::column(3, shiny::sliderInput("max_scatter", "Top rules shown (keep below 500):",
-                                                                                               min = 1, max = length(x), value = min(100, length(x)), step = 1, sep = ""))
-                                                       )),
-                                                   plotly::plotlyOutput("scatterPlot", width='100%', height='100%')
-                                   ),
+
+                                   # shiny::tabPanel('Data Table', value='datatable',
+                                   #                 shiny::br(),
+                                   #                 DT::dataTableOutput("rulesDataTable")
+                                   # ),
+                                   
+                                   # shiny::tabPanel('Scatter', value='scatter',
+                                   #                 shiny::wellPanel(
+                                   #                     shiny::fluidRow(
+                                   #                         shiny::column(3, shiny::uiOutput("xAxisSelectInput")),
+                                   #                         shiny::column(3, shiny::uiOutput("yAxisSelectInput")),
+                                   #                         shiny::column(3, shiny::uiOutput("cAxisSelectInput")),
+                                   #                         shiny::column(3, shiny::sliderInput("max_scatter", "Top rules shown (keep below 500):",
+                                   #                                                             min = 1, max = length(x), value = min(100, length(x)), step = 1, sep = ""))
+                                   #                     )),
+                                   #                 plotly::plotlyOutput("scatterPlot", width='100%', height='100%')
+                                   # ),
                                    
                                    # shiny::tabPanel('Matrix', value='matrix',
                                    #                 shiny::wellPanel(
@@ -201,7 +194,7 @@ shiny::shinyApp(ui = shiny::shinyUI(
                                    #                 plotly::plotlyOutput("matrixPlot", width='100%', height='100%')
                                    # ),
                                    
-                                   shiny::tabPanel('Grouped', value='grouped',
+                                   shiny::tabPanel('Grouped view', value='grouped',
                                                    shiny::wellPanel(
                                                        shiny::fluidRow(
                                                            shiny::column(6, shiny::uiOutput("kSelectInput")),
@@ -211,7 +204,7 @@ shiny::shinyApp(ui = shiny::shinyUI(
                                                        column(width=12, align='center', shiny::plotOutput("groupedPlot")))
                                    ),
                                    
-                                   shiny::tabPanel('Graph', value='graph',
+                                   shiny::tabPanel('Network view', value='graph',
                                                    shiny::wellPanel(
                                                        shiny::fluidRow(
                                                            shiny::column(6, shiny::uiOutput("cAxisSelectInput_graph")),
@@ -222,9 +215,9 @@ shiny::shinyApp(ui = shiny::shinyUI(
                                                    visNetwork::visNetworkOutput("graphPlot", width='100%', height='800px')
                                    ),
                                    
-                                   shiny::tabPanel('Export', value='export',
+                                   shiny::tabPanel('Export selected rules', value='export',
                                                    shiny::br(),
-                                                   shiny::downloadButton('rules.csv', 'Export rules (CSV)'))
+                                                   shiny::downloadButton('rules.csv', 'Download CSV'))
                 )
             )
         ))),
@@ -488,5 +481,5 @@ shiny::shinyApp(ui = shiny::shinyUI(
         )
         
         
-    }, options = list(height = 840)
+    }, options = list(height = 880)
 )
