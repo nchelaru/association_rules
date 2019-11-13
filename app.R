@@ -262,7 +262,7 @@ shinyApp(
                     width = 7,
                     graph_box(
                       plotOutput("item_freq", height='82vh'),
-                      width = 12,
+                      width = 12, 
                       boxtitle = "Frequency of customer characteristics",
                       subtitle = NULL,
                       datepicker = NULL
@@ -275,13 +275,13 @@ shinyApp(
                     tabPanel(
                       tabName = "Description",
                       active = TRUE,
-                      box(data_prep, width = 12, collapsible = FALSE, 
+                      box(data_prep, width = 12, height=785, collapsible = FALSE, 
                           title = 'Prepare and explore data for association rule mining')
                     ),
                     tabPanel(
                       tabName = "Workflow",
                       active = FALSE,
-                      box(prep_code, width = 12, collapsible = FALSE, 
+                      box(prep_code, width = 12, height=785, collapsible = FALSE, 
                           title = 'General workflow')
                     )
                   )
@@ -296,13 +296,13 @@ shinyApp(
                            tabPanel(
                              tabName = "Summary",
                              active = TRUE,
-                             box(rule_mining, width = 12, collapsible = FALSE, 
+                             box(rule_mining, width = 12, height=810, collapsible = FALSE, 
                                  title = 'Creating and refining association rules')
                              ),
                            tabPanel(
                              tabName = 'Code',
                              active = FALSE,
-                              box(width=12, collapsible=FALSE, mining_code, 
+                              box(width=12, height=810, collapsible=FALSE, mining_code, 
                                   title='General workflow for creating, filtering and visualizing association rules')
                            ))
                            ),
@@ -313,16 +313,16 @@ shinyApp(
                            tabPanel(
                              tabName = 'Plot',
                              active = FALSE,
-                             box(width=12, height='1200px', collapsible=FALSE, 
+                             box(width=12, height=810, collapsible=FALSE, 
                                  title='The top 14 non-redundant and statistically significant churn rules with the highest support',
-                                 HTML(paste('<p style="font-size: 16px; margin:20px;"><b>Each circle represents an association rule that connects LHS and RHS items via arrows.</b></p>',
+                                 HTML(paste('<p style="font-size: 16px; margin:10px;"><b>Each circle represents an association rule that connects LHS and RHS items via arrows.</b></p>',
                                             '<center><img src="circ_plot.png" height="135%"></center>')))
                              
                            ),
                            tabPanel(
                              tabName = "Table",
                              active = TRUE,
-                             box(width=12, height='1200px', collapsible=FALSE, 
+                             box(width=12, height=810,  collapsible=FALSE, 
                                  title='Customer characteristics and purchases associated with churn',
                                  DT::dataTableOutput("churn_rules", height = '76vh'))
                            )
