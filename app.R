@@ -151,7 +151,7 @@ data_prep <- HTML("<div style='margin: 10px 15px 10px 15px;; font-size:20px;'>
 
 prep_code <- HTML('<div style="margin: 20px;"><script src="https://gist.github.com/nchelaru/7119cad617161ae209cddd64f7c28ac9.js"></script></div>')
 
-rule_mining <- HTML("<div style='font-size: 20px; margin: 15px;'><p>
+rule_mining <- HTML("<div style='font-size: 20px; margin: 15px;'>
                       The Apriori algorithm is most commonly used for association rule mining, which will also be used in this example. 
                       We can set various parameters to limit the number of rules created from the dataset, 
                       usually how often the rule is observed (<b>support</b>), how often it is true (<b>confidence</b>) 
@@ -163,31 +163,31 @@ rule_mining <- HTML("<div style='font-size: 20px; margin: 15px;'><p>
                       Nevertheless, the number of rules obtained at this step will almost certainly be too numerous to provide insights. 
                       We can further filter the rules by several criteria:
                       
-                      <ul style='list-style-type:circle;'>
-                        <li><b>Lift</b></li>
+                      <ul style='list-style-type:circle; font-size: 20px;'>
+                        <li style='font-size: 20px;'><b>Lift</b></li>
                           <ul style='list-style-type:disc;'>
-                            <li> A measure of how much more or less likely the items in a given rule appear together as compared to by chance. </li>
-                            <li> Therefore, it is a metric of the <i>importance</i> of a rule. </li>
+                            <li style='font-size: 20px;'> A measure of how much more or less likely the items in a given rule appear together as compared to by chance. </li>
+                            <li style='font-size: 20px;'> Therefore, it is a metric of the <i>importance</i> of a rule. </li>
                           </ul>
-                        <li><b>Redundance and statistical significance</b></li>
-                           <ul style='list-style-type:disc;'>
-                            <li> A rule is considered to be redundant if a more general rules with the same or a higher confidence exists</li>
-                            <li> Fisher's exact test with multiple comparisons correct is used to identify rules where the association between 
+                        <li style='font-size: 20px;'><b>Redundance and statistical significance</b></li>
+                           <ul style='list-style-type:disc; font-size: 20px;'>
+                            <li style='font-size: 20px;'> A rule is considered to be redundant if a more general rules with the same or a higher confidence exists</li>
+                            <li style='font-size: 20px;'> Fisher's exact test with multiple comparisons correct is used to identify rules where the association between 
                             items on the left-hand (LHS) and right-hand side (RHS) is statistically significant</li> 
                            </ul>
-                        <li><b>Items of interest</b></li>
-                           <ul style='list-style-type:disc;'>
-                            <li>As in this example we are most interested in characteristics that are associated with customer churn, 
+                        <li style='font-size: 20px;'><b>Items of interest</b></li>
+                           <ul style='list-style-type:disc; font-size: 20px;'>
+                            <li style='font-size: 20px;'>As in this example we are most interested in characteristics that are associated with customer churn, 
                             we can extract <b>only</b> the rules that contain <code>Churn</code> in the RHS.</li>
                           </ul>
-                        </ul>
+                      </ul>
                         
                       <br>
                       
                       The filtered rules can be viewed in a data table or plotted, as seen on the right. The <code>arulesViz</code> package offers 
                       <i>many</i> different options for visualizing a given rule set (as you can see in the interactive app in the next tab), 
                       but the circular grouped plot shown under the 'Plot' tab is one of the best for displaying a handful (~15) rules of particular interest.
-                    </p></div>")
+                    </div>")
 
 mining_code <- HTML('<script src="https://gist.github.com/nchelaru/25cdeb4d7f7b457ca3bf735dd595836e.js"></script>')
 
@@ -360,7 +360,7 @@ shinyApp(
                              tabName = "Summary",
                              active = TRUE,
                              box(rule_mining, width = 12, height=900, collapsible = FALSE, 
-                                 title = 'Creating and refining association rules')
+                                 title = 'Creating and refining association rules', inlineCSS(list("li-content" = "font-size: 20px;")))
                              ),
                            tabPanel(
                              tabName = 'Code',
