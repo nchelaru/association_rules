@@ -7,14 +7,49 @@ library(data.table)
 library(DT)
 library(ggplot2)
 library(arulesViz)
+library(shinyjs)
+library(shinyBS)
 
+welcome_msg <- HTML('<center><h3>Welcome to an Intelligence Refinery data science microlearning series!</h3></center>
+                   
+                    <hr>
+                    
+                    <p style="margin:10px; font-size: 20px;"><b>Association rule mining</b> is a widely used method for exploring patterns of co-occurrence in large datasets, 
+                    with applications in many diverse fields such as business, medicine and engineering. 
+                    
+                    <br><br>
+                    
+                    Throughout this series you will assemble, in bite-sized pieces, a starter-kit of concepts and tools that you can use
+                    to discover interesting relationships in other datasets.
+                    
+                    <br><br>
+                    
+                    You can navigate through sections of this tutorial by <i>double</i> clicking on the tabs in the sidebar. 
+                    
+                    <br><br>
+                    
+                    Have fun! <i class="fas fa-smile-beam"></i>
+                    
+                    <br><br>
+                    
+                    <center><a href="https://www.intelligencerefinery.io"><img src="full_logo.png" style="height:150px;"></a></center>
+                    
+                    </p>')
 
-what <- HTML('<font size=3>Association rule mining is an approach to discovering patterns of co-occurrence 
+what <- HTML('<div style="font-size:17px; margin:10px;">
+              
+              <b>Association rule mining</b> is an approach to discovering patterns of co-occurrence 
               in a (large) dataset, by identifying entities that frequently appear together in a group. 
               As an <i>unsupervised</i> learning technique, association rule mining can be used to identify novel
               patterns/relationships amongst entities in a large set of data.
+              
               <br><br>
-              This type of patterns are summarized by <b>association rules</b>, which predicts the occurrence of 
+              
+              <center><img src="mind_map.png" style="height:200px;"></center>
+              
+              <br><br>
+              
+              This type of patterns are summarized by association rules, which predicts the occurrence of 
              one or more entities based on the occurrences of other entities in a certain grouping, 
              such as a transaction or an individual. For example, an association rule found in a grocery retailer database may be:
              
@@ -32,10 +67,11 @@ what <- HTML('<font size=3>Association rule mining is an approach to discovering
              
              It is important to note that <b>the association rule does not imply a causal relationship</b>
             between itemsets on the left and right hand side of the rule.
-             </font>')
+             </div>
+             ')
 
 
-when <- HTML('<font size=3>Some <a href="https://www.slideshare.net/rdatamining/rdatamining-slidesassociationruleminingwithr"><link>applications</link></a> of association rule mining:
+when <- HTML('<div style="font-size:17px; margin:10px;">Some <a href="https://www.slideshare.net/rdatamining/rdatamining-slidesassociationruleminingwithr"><link>applications</link></a> of association rule mining:
               <br><br>
               <ul style="list-style-type:circle;">
                 <li><b>Market basket analysis</b>:
@@ -68,11 +104,18 @@ when <- HTML('<font size=3>Some <a href="https://www.slideshare.net/rdatamining/
                     </ul>
                     </li>
               </ul> 
-              </font>')
+              </div>
+             
+             <br>
+             
+             <center><img src="applications.png" style="height:200px;"></center>
+             
+             
+             ')
 
-data_prep <- HTML("<div style='margin: 10px 15px 10px 15px;; font-size:16px;'>
+data_prep <- HTML("<div style='margin: 10px 15px 10px 15px;; font-size:20px;'>
                     In this microlearning series, we will perform association rule mining on the 
-                  <a href='https://developer.ibm.com/patterns/predict-customer-churn-using-watson-studio-and-jupyter-notebooks/'>IBM Telco customer churn dataset</a>, 
+                  <a href='https://developer.ibm.com/patterns/predict-customer-churn-using-watson-studio-and-jupyter-notebooks/'><link>IBM Telco customer churn dataset</link></a>, 
                   to identify customer characteristics and purchasing behaviours that tend to appear together, 
                   which are typically helpful in informing marketing and customer retention strategies.
                   
@@ -108,7 +151,7 @@ data_prep <- HTML("<div style='margin: 10px 15px 10px 15px;; font-size:16px;'>
 
 prep_code <- HTML('<div style="margin: 20px;"><script src="https://gist.github.com/nchelaru/7119cad617161ae209cddd64f7c28ac9.js"></script></div>')
 
-rule_mining <- HTML("<div style='font-size: 17px; margin: 20px;'><p>
+rule_mining <- HTML("<div style='font-size: 20px; margin: 15px;'><p>
                       The Apriori algorithm is most commonly used for association rule mining, which will also be used in this example. 
                       We can set various parameters to limit the number of rules created from the dataset, 
                       usually how often the rule is observed (<b>support</b>), how often it is true (<b>confidence</b>) 
@@ -155,8 +198,9 @@ interpretation <- HTML('After all this is done, we can then convert the associat
                       “count” of each rule divided by the total number of customers in the dataset equals its support.')
 
 
-about_msg <- HTML('<div style="font-size:15px; margin:15px;">
-                  This microlearning series is one of many that I have created for <b>Intelligence Refinery</b>, 
+about_msg <- HTML('<div style="font-size:18px; margin: 0px 15px 15px 15px;"><p><img style="height:150px; float: left; padding: 10px 15px 15px 0px;" src="https://octodex.github.com/images/andycat.jpg" alt="avatar"> 
+                  This microlearning series is one of several that I have created for 
+                  <a href="https://www.intelligencerefinery.io"><b>Intelligence Refinery</b></a>, 
                   a knowledge repository for all things data science and software development that I co-curate with Mihai Chelaru. 
                   
                   <br><br>
@@ -168,55 +212,63 @@ about_msg <- HTML('<div style="font-size:15px; margin:15px;">
                   
                   <br><br>
                   
-                  If you are interested in what else we have cooked up or want to drop us a line, 
-                  the links to Intelligence Refinery and my personal portfolio, The Perennial Beginner, are right below.
-                  </div>
-                  ')
+                  On the left, you can find other data science microlearning series and fun hobby projects that I have cooked up. 
+                  I would love to hear any comments or suggestions that you may have. 
+                  <br><br>
+                  
+                  Hope that you have enjoyed your time here! <i class="fas fa-smile"></i>
+                  </p>
+                  
+                  <br><hr><br>
+                  
+                  If you have any comments, questions or suggestions, you can find me at:
+                  <br><br>
+                  <center><a href="mailto:nancy.chelaru@gmail.com"><i class="fas fa-envelope" style="padding:10px;"></i></a>
+                  <a href="https://www.intelligencerefinery.io/contact/"><i class="fas fa-globe" style="padding:10px;"></i></i></a>
+                  <a href="https://github.com/nchelaru?tab=repositories"><i class="fab fa-github-alt" style="padding:10px;"></i></a>
+                  <a href="https://twitter.com/n_chelaru"><i class="fab fa-twitter" style="padding:10px;"></i></a></center>
+
+                  </div>')
+
+iframe_test <- HTML('<iframe src="https://raindrop.io/collection/8841871" 
+                    style="border:0px #ffffff none;" name="myiFrame" scrolling="no" 
+                    frameborder="1" marginheight="0px" marginwidth="0px" height="950px" 
+                    width="100%" allowfullscreen></iframe>')
+
 
 shinyApp(
   ui = gentelellaPageCustom(
     title = "Association rule mining",
-    navbar = gentelellaNavbar(
-      navbarItems = notif(
-        id = "msg",
-        icon = icon("envelope-o"),
-        status = "primary",
-        expanded = FALSE,
-        notifItem(
-            title = "John Doe",
-            date = "3 min ago",
-            "Film festivals used to be do-or-die moments
-            for movie makers. They were where...")
-    )),
     sidebar = gentelellaSidebar(
       site_title = HTML(paste('<img src="https://i.ibb.co/LzjJ6LL/logo-blue.png" alt="IntelRefinery" height=42>', "<font size=3>Intelligence Refinery</font>")),
       sidebarMenu(
+        br(),
         sidebarItem(
-          HTML("<font size=2>Getting started</font>"),
+          HTML("<font size=4>Getting started</font>"),
           tabName = "intro", 
           icon = tags$i(class = "far fa-flag"), 
           badgeName = "new",
           badgeStatus = "danger"
         ),
         sidebarItem(
-          HTML("<font size=2>Data prep</font>"),
+          HTML("<font size=4>Data prep</font>"),
           tabName = "data_proc", 
           icon = tags$i(class = "fas fa-chart-bar"), 
           badgeName = "new",
           badgeStatus = "danger"
         ),
         sidebarItem(
-          HTML("<font size=2>Rule mining</font>"),
+          HTML("<font size=4>Rule mining</font>"),
           tabName = "assn_rules", 
           icon = tags$i(class = "fas fa-list-ul")
         ),
         sidebarItem(
-          HTML("<font size=2>Rule explorer</font>"),
+          HTML("<font size=4>Explore</font>"),
           tabName = "app", 
           icon = tags$i(class = "fas fa-project-diagram")
         ),
         sidebarItem(
-          HTML("<font size=2>About this app</font>"),
+          HTML("<font size=4>About</font>"),
           tabName = "about", 
           icon = tags$i(class = "fas fa-question")
         )
@@ -226,42 +278,52 @@ shinyApp(
       tabItems(
         tabItem(
           tabName = 'intro',
-          jumbotron(
-            title = NULL,
-            HTML("Let's start with a quick introduction to what association rule mining is and what it can be used for. 
-                 When you are ready, <i>double</i> click on the next tab in the sidebar to get started! <i class='fas fa-smile'></i>")
-            ),
-          box(what, width = 5, height = 650, title = HTML("<font size=5>What is it?</font>"),
-              subtitle = NULL, collapsible = FALSE, closable = FALSE,
-              dropdownMenu = NULL),
-          box(when, width = 4, height = 650, title = HTML("<font size=5>When to use it?</font>"),
-              subtitle = NULL, collapsible = FALSE, closable = FALSE,
-              dropdownMenu = NULL),
-          box(
-            activityList(
-             activityItem(HTML("<font size=2>Data Mining with R</font>"), 
-                          title = "Association Rule Mining with R", img = "https://i.ibb.co/hx6ctrQ/rmd.png", 
-                          url = "https://www.slideshare.net/rdatamining/rdatamining-slidesassociationruleminingwithr"),
-             activityItem(HTML("<font size=2>AgroParisTech</font>"), 
-                          title = "Frequent itemsets and association rules", img = "https://media.glassdoor.com/sql/1125817/agroparistech-squarelogo-1454497957893.png", 
-                          url = "http://www2.agroparistech.fr/ufr-info/membres/cornuejols/Teaching/Erasmus-IT4BI/Tr-frequent-items-setx4.pdf"),
-             activityItem(HTML("<font size=2>Fordham University</font>"),  
-                          title = "Frequent Patterns and Association Rule Mining", img = "https://upload.wikimedia.org/wikipedia/en/thumb/3/3e/Fordham_University_seal.svg/150px-Fordham_University_seal.svg.png",
-                          url = "https://storm.cis.fordham.edu/~yli/documents/CISC4631Spring17/Chapter5_Asso.pdf"),
-             activityItem(HTML("<font size=2>University of British Columbia</font>"),
-                          title = "Association rules", img = "https://www.mykootenaynow.com/wp-content/uploads/2016/02/UBC-Logo-425x420.jpg",
-                          url = "https://www.cs.ubc.ca/~schmidtm/Courses/340-F15/L11.pdf")
-              ), 
-              width = 3, height = 650, title = HTML("<font size=5>Where to learn about it?</font>"), 
-              collapsible = FALSE, closable = FALSE, dropdownMenu = NULL)
+          br(),
+          br(),
+          bsModal(id = 'startupModal', title = NULL, trigger = '',
+                  size = 'large', welcome_msg),
+          fluidRow(
+            column(width=5,
+                   box(what, width = 12, height = 870, title = HTML("<font size=5>What is it?</font>"),
+                       subtitle = NULL, collapsible = FALSE, closable = FALSE,
+                       dropdownMenu = NULL)
+                   ),
+            column(width=4,
+                   box(when, width = 12, height = 870, title = HTML("<font size=5>When to use it?</font>"),
+                       subtitle = NULL, collapsible = FALSE, closable = FALSE,
+                       dropdownMenu = NULL)
+                   ),
+            column(width=3,
+                   box(HTML('<center><a href="https://www.intelligencerefinery.io"><img src="resources.png" style="margin: 10px; height:120px;"></a></center>
+                            <p style="font-size:17px; margin:10px;">If you want more details, we have found some great introductions to association rule mining:</p><br>'),
+                     activityList(
+                       activityItem(HTML("<font size=2>Data Mining with R</font>"), 
+                                    title = "Association Rule Mining with R", img = "https://i.ibb.co/hx6ctrQ/rmd.png", 
+                                    url = "https://www.slideshare.net/rdatamining/rdatamining-slidesassociationruleminingwithr"),
+                       activityItem(HTML("<font size=2>AgroParisTech</font>"), 
+                                    title = "Frequent itemsets and association rules", img = "https://media.glassdoor.com/sql/1125817/agroparistech-squarelogo-1454497957893.png", 
+                                    url = "http://www2.agroparistech.fr/ufr-info/membres/cornuejols/Teaching/Erasmus-IT4BI/Tr-frequent-items-setx4.pdf"),
+                       activityItem(HTML("<font size=2>Fordham University</font>"),  
+                                    title = "Frequent Patterns and Association Rule Mining", img = "https://upload.wikimedia.org/wikipedia/en/thumb/3/3e/Fordham_University_seal.svg/150px-Fordham_University_seal.svg.png",
+                                    url = "https://storm.cis.fordham.edu/~yli/documents/CISC4631Spring17/Chapter5_Asso.pdf"),
+                       activityItem(HTML("<font size=2>University of British Columbia</font>"),
+                                    title = "Association rules", img = "https://www.mykootenaynow.com/wp-content/uploads/2016/02/UBC-Logo-425x420.jpg",
+                                    url = "https://www.cs.ubc.ca/~schmidtm/Courses/340-F15/L11.pdf")
+                     ), 
+                     width = 12, height = 870, title = HTML("<font size=5>Where to learn about it?</font>"), 
+                     collapsible = FALSE, closable = FALSE, dropdownMenu = NULL)
+                   )
+          )
         ),
         
         tabItem(tabName = 'data_proc',
+                br(),
+                br(),
                 fluidRow(
                   column(
                     width = 7,
                     graph_box(
-                      plotOutput("item_freq", height='82vh'),
+                      plotOutput("item_freq", height=845),
                       width = 12, 
                       boxtitle = "Frequency of customer characteristics",
                       subtitle = NULL,
@@ -275,20 +337,21 @@ shinyApp(
                     tabPanel(
                       tabName = "Description",
                       active = TRUE,
-                      box(data_prep, width = 12, height=785, collapsible = FALSE, 
+                      box(data_prep, width = 12, height=850, collapsible = FALSE, 
                           title = 'Prepare and explore data for association rule mining')
                     ),
                     tabPanel(
                       tabName = "Workflow",
                       active = FALSE,
-                      box(prep_code, width = 12, height=785, collapsible = FALSE, 
-                          title = 'General workflow')
+                      box(prep_code, width = 12, height=850, collapsible = FALSE, 
+                          title = 'General workflow', inlineCSS(list("gist" = "font-size: 18px")))
                     )
                   )
                   
                 ))), 
         
         tabItem(tabName = "assn_rules",
+                br(),
                 fluidRow(
                   column(width = 6,
                          tabSetPanel(
@@ -296,13 +359,13 @@ shinyApp(
                            tabPanel(
                              tabName = "Summary",
                              active = TRUE,
-                             box(rule_mining, width = 12, height=810, collapsible = FALSE, 
+                             box(rule_mining, width = 12, height=900, collapsible = FALSE, 
                                  title = 'Creating and refining association rules')
                              ),
                            tabPanel(
                              tabName = 'Code',
                              active = FALSE,
-                              box(width=12, height=810, collapsible=FALSE, mining_code, 
+                              box(width=12, height=900, collapsible=FALSE, mining_code, 
                                   title='General workflow for creating, filtering and visualizing association rules')
                            ))
                            ),
@@ -313,18 +376,21 @@ shinyApp(
                            tabPanel(
                              tabName = 'Plot',
                              active = FALSE,
-                             box(width=12, height=810, collapsible=FALSE, 
-                                 title='The top 14 non-redundant and statistically significant churn rules with the highest support',
-                                 HTML(paste('<p style="font-size: 16px; margin:10px;"><b>Each circle represents an association rule that connects LHS and RHS items via arrows.</b></p>',
+                             box(width=12, height=900, collapsible=FALSE, 
+                                 title='Grouped plot',
+                                 HTML(paste('<p style="font-size: 17px; margin:10px;">
+                                            <b>This plot shows the top 14 (in terms of support) non-redundant and statistically significant rules that contain "Churn" in the RHS. 
+                                            <br><br>Each circle represents an association rule that connects LHS and RHS items via arrows, the colour of which is proportional to its lift.</b></p>',
                                             '<center><img src="circ_plot.png" height="135%"></center>')))
                              
                            ),
                            tabPanel(
                              tabName = "Table",
                              active = TRUE,
-                             box(width=12, height=810,  collapsible=FALSE, 
+                             box(width=12, height=900,  collapsible=FALSE, 
                                  title='Customer characteristics and purchases associated with churn',
-                                 DT::dataTableOutput("churn_rules", height = '76vh'))
+                                 DT::dataTableOutput("churn_rules", height = '76vh')),
+                             inlineCSS(list("table" = "font-size: 17px", "h2" = "font-size: 26px", "li"= "font-size: 16px"))
                            )
                            
                            )
@@ -335,6 +401,7 @@ shinyApp(
         
         tabItem(
           tabName = "app",
+          br(), 
           fluidRow(
             column(
               width = 12,
@@ -346,40 +413,30 @@ shinyApp(
         
         tabItem(
           tabName = "about",
+          br(), 
           fluidRow(
-            contactBox(about_msg, head_title = "Hi, I'm Nancy Chelaru!", main_title = NULL, 
-                       img = "https://octodex.github.com/images/andycat.jpg",
-                       footer_left = HTML('<a href="https://www.intelligencerefinery.io"><img src="https://i.ibb.co/889HCvZ/full-logo.png" alt="IntelRefinery" height=60 border="0"></a>'), 
-                       footer_right = HTML('<a href="https://nancychelaru.rbind.io"><img src="https://i.ibb.co/ysKpwRM/perennial-logo.png"  alt="Portfolio" height=60 border="0"></a>'),
-                       width=4),
-            column(
-              width=3, 
-              box(
-                width = 12,
-                title = "To-dos",
-                quickList(collapsible=FALSE,
-                  quickListItem(icon = icon("calendar-o"), name = "Settings"),
-                  quickListItem(icon = icon("bars"), name = "Subscription")
-                )
-              )
-                   ),
-            column(
-              width = 5,
-              timeline(
-                timelineItem("Change", title = "Introduction", url = "https://nancy-chelaru-centea.shinyapps.io/podcast_db/", date ="November 6, 2018",
-                             author = "N. Chelaru", tag = NULL),
-                timelineItem("hellof", title = NULL, url = NULL, date = "November 29, 2019",
-                             author = NULL, tag = NULL)
-              )
-            )
-          )
-        )
+                  column(
+                    width=8,
+                    iframe_test),
+                  column(
+                    width=4, 
+                    box(about_msg, width=12, height=950, collapsible=FALSE,
+                              title="Hi, I'm Nancy Chelaru!")
+                    
+                  )
+                   
+                   )
+                   )
+          
       )
-    )
-  ),
+      )
+    ),
   
   
   server = function(input, output, session) {
+    ## Pop up
+    toggleModal(session, "startupModal", toggle = "open")
+    
     ## Item frequency plot
     tData <- read.transactions('./final_df.csv', 
                                format = "basket", sep = ",", 
@@ -402,9 +459,9 @@ shinyApp(
     output$item_freq <- renderPlot(p)
     
     ## Churn rules table
-    churn_rules_df <- read.csv('./churn_rules.csv') %>% select(-count)  %>% mutate_if(is.numeric, round, 3)
+    churn_rules_df <- read.csv('./churn_rules.csv') %>% select(-count)  %>% mutate_if(is.numeric, round, 3) 
 
-    output$churn_rules <- DT::renderDataTable(churn_rules_df, 
+    output$churn_rules <- DT::renderDataTable(churn_rules_df,
                                              options = list(pageLength = 15, 
                                                             scrollX = TRUE,
                                                             scrollY = TRUE)) 

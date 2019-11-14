@@ -1,6 +1,5 @@
 library(shiny)
 library(shinythemes)
-library(DT)
 library(data.table)
 library(arules)
 library(arulesViz)
@@ -9,7 +8,7 @@ library(plyr)
 library(dplyr)
 
 app_instructions <- HTML(paste('<center><a href="https://iconscout.com/illustration/computer-vision-1533033"><img src="https://i.ibb.co/t3S8xtV/app.jpg" alt="app" border="0" height=250></a></center>',
-                        '<div style="font-size:18px; margin:20px;">
+                        '<div style="font-size:22px; margin:20px;">
                          Congratulations on getting here! By now, you should have a working understanding of the steps involved in 
                          performing association rule mining to gain insights into co-occurrence patterns in a large dataset.
                          
@@ -31,6 +30,7 @@ app_instructions <- HTML(paste('<center><a href="https://iconscout.com/illustrat
                          the relationships between various customer characteristics and churn, our outcome of interest. Finally, 
                          the rules of interest can be exported in a CSV file for further analysis.
                          
+                         <br>
                          <hr>
                          
                          <i>Note: The app shown here is adapted from the original, so please see 
@@ -147,13 +147,15 @@ shiny::shinyApp(ui = shiny::shinyUI(
                 shiny::sliderInput("length", "Rule length (from-to):", min = 2, max = 20,
                                    value = c(2,10) , step =  1, sep = ""),
                 
-                #shiny::br(),
+                shiny::br(),
                 shiny::em(shiny::HTML('Filter rules by items:')),
-                #shiny::br(),
+                shiny::br(),
                 shiny::selectInput('colsType',NULL,c('Exclude items:'='rem','Require items:'='req')),
                 shiny::uiOutput("choose_columns"),
+                shiny::br(),
                 shiny::selectInput('colsLHSType',NULL,c('Exclude items from LHS:'='rem','Require items in LHS:'='req')),
                 shiny::uiOutput("choose_lhs"),
+                shiny::br(),
                 shiny::selectInput('colsRHSType',NULL,c('Exclude items from RHS:'='rem','Require items in RHS:'='req')),
                 shiny::uiOutput("choose_rhs")
             ),
@@ -161,7 +163,7 @@ shiny::shinyApp(ui = shiny::shinyUI(
             shiny::mainPanel(
                 shiny::tabsetPanel(id='tabs',
                                    
-                                   shiny::tabPanel('Introduction', value='intro',
+                                   shiny::tabPanel(HTML('<font size=4>Introduction</font>'), value='intro',
                                                    app_instructions
                                    ),
                                    
@@ -194,7 +196,7 @@ shiny::shinyApp(ui = shiny::shinyUI(
                                    #                 plotly::plotlyOutput("matrixPlot", width='100%', height='100%')
                                    # ),
                                    
-                                   shiny::tabPanel('Grouped view', value='grouped',
+                                   shiny::tabPanel(HTML('<font size=4>Grouped plot</font>'), value='grouped',
                                                    shiny::wellPanel(
                                                        shiny::fluidRow(
                                                            shiny::column(6, shiny::uiOutput("kSelectInput")),
@@ -204,7 +206,7 @@ shiny::shinyApp(ui = shiny::shinyUI(
                                                        column(width=12, align='center', shiny::plotOutput("groupedPlot")))
                                    ),
                                    
-                                   shiny::tabPanel('Network view', value='graph',
+                                   shiny::tabPanel(HTML('<font size=4>Network view</font>'), value='graph',
                                                    shiny::wellPanel(
                                                        shiny::fluidRow(
                                                            shiny::column(6, shiny::uiOutput("cAxisSelectInput_graph")),
@@ -215,7 +217,7 @@ shiny::shinyApp(ui = shiny::shinyUI(
                                                    visNetwork::visNetworkOutput("graphPlot", width='100%', height='800px')
                                    ),
                                    
-                                   shiny::tabPanel('Export selected rules', value='export',
+                                   shiny::tabPanel(HTML('<font size=4>Export selected rules</font>'), value='export',
                                                    shiny::br(),
                                                    shiny::downloadButton('rules.csv', 'Download CSV'))
                 )
@@ -423,8 +425,8 @@ shiny::shinyApp(ui = shiny::shinyUI(
             shiny::req(input$cAxis_grouped, input$k)
             handleErrors()
             
-            plot(rules(), method='graph', shading = input$cAxis_grouped, control=list(k=input$k, layout=igraph::in_circle()))
-        }, height=600, width=800)
+            plot(rules(), method='graph', cex=1.6, shading = input$cAxis_grouped, control=list(main=NULL, k=input$k, layout=igraph::in_circle()))
+        }, height=700, width=900)
         
         
         ## Circular plot ##########################
@@ -481,5 +483,5 @@ shiny::shinyApp(ui = shiny::shinyUI(
         )
         
         
-    }, options = list(height = 880)
+    }, options = list(height = 1000)
 )
