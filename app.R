@@ -9,6 +9,7 @@ library(ggplot2)
 library(arulesViz)
 library(shinyjs)
 library(shinyBS)
+library(tippy)
 
 welcome_msg <- HTML('<center><h3>Welcome to an Intelligence Refinery data science microlearning series!</h3></center>
                    
@@ -241,37 +242,46 @@ shinyApp(
     title = "Association rule mining",
     sidebar = gentelellaSidebar(
       site_title = HTML(paste('<img src="https://i.ibb.co/LzjJ6LL/logo-blue.png" alt="IntelRefinery" height=42>', "<font size=3>Intelligence Refinery</font>")),
+      uiOutput("profile"),
       sidebarMenu(
-        br(),
         sidebarItem(
           HTML("<font size=4>Getting started</font>"),
           tabName = "intro", 
           icon = tags$i(class = "far fa-flag"), 
           badgeName = "new",
-          badgeStatus = "danger"
+          badgeStatus = "danger",
+          class='tippy'
         ),
         sidebarItem(
           HTML("<font size=4>Data prep</font>"),
           tabName = "data_proc", 
           icon = tags$i(class = "fas fa-chart-bar"), 
           badgeName = "new",
-          badgeStatus = "danger"
+          badgeStatus = "danger",
+          class="tippy"
         ),
         sidebarItem(
           HTML("<font size=4>Rule mining</font>"),
           tabName = "assn_rules", 
-          icon = tags$i(class = "fas fa-list-ul")
+          icon = tags$i(class = "fas fa-list-ul"),
+          class="tippy"
         ),
         sidebarItem(
           HTML("<font size=4>Explore</font>"),
           tabName = "app", 
-          icon = tags$i(class = "fas fa-project-diagram")
+          icon = tags$i(class = "fas fa-project-diagram"),
+          class="tippy"
         ),
         sidebarItem(
           HTML("<font size=4>About</font>"),
           tabName = "about", 
-          icon = tags$i(class = "fas fa-question")
-        )
+          icon = tags$i(class = "fas fa-question"),
+          class="tippy"
+        ),
+        tippy_class("tippy", content="<h4>Double click me!</h4>", allowHTML=TRUE,
+                    duration = 1000, 
+                    placement = "top",
+                    theme = "light")
       )
     ),
     body = gentelellaBody(
@@ -465,6 +475,13 @@ shinyApp(
                                              options = list(pageLength = 15, 
                                                             scrollX = TRUE,
                                                             scrollY = TRUE)) 
+    
+    output$profile <- renderUI({
+      sidebarProfile(
+        name = input$name,
+        img = "https://image.flaticon.com/icons/svg/236/236831.svg"
+      )
+    })
 
 
     

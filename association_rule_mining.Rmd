@@ -1,0 +1,949 @@
+---
+title: "Association rule mining"
+output: 
+  flexdashboard::flex_dashboard:
+    social: menu
+    source_code: embed
+    theme: united
+runtime: shiny
+---
+
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(knitr)
+library(kableExtra)
+library(plyr)
+library(dplyr)
+library(arulesCBA)
+library(arules)
+library(ggplot2)
+library(shiny)
+
+knitr::opts_chunk$set(cache = TRUE, echo=F, eval=T, warning = FALSE, message = FALSE)
+```
+ 
+
+
+Workflow {.storyboard}
+=========================================
+
+Inputs {.sidebar}
+-------------------------------------
+
+Association rule mining is an approach to discovering patterns of co-occurrence in a (large) dataset, by identifying entities that frequently appear together in a group. As an unsupervised learning technique, association rule mining can be used to identify novel patterns/relationships amongst entities in a large set of data.
+
+This type of patterns are summarized by **association rules**, which predicts the occurrence of one or more entities based on the occurrences of other entities in a certain grouping, such as a transaction or an individual. 
+
+As usual, we will perform association rule mining on the [IBM Telco customer churn dataset](https://developer.ibm.com/patterns/predict-customer-churn-using-watson-studio-and-jupyter-notebooks/), to identify customer characteristics and purchasing behaviours that tend to appear together, which may be helpful in informing marketing and customer retention strategies.
+
+Furthermore, the `arules` package for performing association rule mining in R provides a very handy Shiny application that allows interactive exploration and visualization of resultant rules, which can serve as a light-weight recommender app. You can test it out under the "Shiny app" tab. 
+
+Hope you enjoy your stay! :)
+
+
+
+### **Prepare & inspect data** <br><br> Convert dataset to transaction format {data-commentary-width=550}
+
+```{r}
+## Import library
+library(plyr)
+library(dplyr)
+library(arulesCBA)
+library(arules)
+library(ggplot2)
+
+## Import data that has been cleaned up
+df <-read.csv("https://github.com/nchelaru/data-prep/raw/master/telco_cleaned_yes_no.csv")
+
+## Discretize "MonthlyCharges" with respect to "Churn"/"No Churn" label and assign to new column in dataframe
+df$Binned_MonthlyCharges <- discretizeDF.supervised(Churn ~ ., df[, c('MonthlyCharges', 'Churn')], method='mdlp')$MonthlyCharges
+
+## Rename the levels based on knowledge of min/max monthly charges
+df$Binned_MonthlyCharges = revalue(df$Binned_MonthlyCharges, 
+                                   c("[-Inf,29.4)"="$0-29.4", 
+                                     "[29.4,56)"="$29.4-56", 
+                                     "[56,68.8)"="$56-68.8", 
+                                     "[68.8,107)"="$68.8-107", 
+                                     "[107, Inf]" = "$107-118.75"))
+
+## Discretize "Tenure" with respect to "Churn"/"No Churn" label and assign to new column in dataframe
+df$Binned_Tenure <- discretizeDF.supervised(Churn ~ ., 
+                                            df[, c('Tenure', 'Churn')], 
+                                            method='mdlp')$Tenure
+
+## Rename the levels based on knowledge of min/max tenures
+df$Binned_Tenure = revalue(df$Binned_Tenure, 
+                           c("[-Inf,1.5)"="1-1.5m", 
+                             "[1.5,5.5)"="1.5-5.5m",
+                             "[5.5,17.5)"="5.5-17.5m",
+                             "[17.5,43.5)"="17.5-43.5m",
+                             "[43.5,59.5)"="43.5-59.5m",
+                             "[59.5,70.5)"="59.5-70.5m",
+                             "[70.5, Inf]"="70.5-72m"))
+
+## Replace "No"s with empty values
+df[df=="No"]<-NA
+
+df[] <- lapply(df, function(x) levels(x)[x])
+
+## Replace "Yes"s with the column name
+w <- which(df == "Yes", arr.ind = TRUE)
+
+df[w] <- names(df)[w[,"col"]]
+
+## Output to CSV
+write.csv(df, './final_df.csv', row.names=FALSE)
+```
+
+```{r}
+## Convert dataframe to transaction format
+tData <- read.transactions('./final_df.csv', 
+                           format = "basket", sep = ",", 
+                           header=TRUE)
+
+## Get item frequency
+x <- data.frame(sort(table(unlist(LIST(tData))), decreasing=TRUE))
+
+## Plot
+ ggplot(data=x, aes(x=factor(x$Var1), y=x$Freq)) + 
+          geom_col() +
+          theme(axis.text.y = element_text(size=16, vjust=0),
+                panel.grid.major = element_blank(),
+                panel.background = element_blank(),
+                axis.ticks = element_blank()) +
+          ylab('Frequency') +
+          xlab(' ') +
+          coord_flip() +
+          scale_fill_gradient2(low = "green", 
+                               high = "red", 
+                               midpoint = median(x$Freq)) 
+ 
+ 
+ggplot(data=x, aes(x=factor(Var1), y=Freq)) +
+  geom_col(aes(fill = Freq)) + 
+  labs(title = "Similiarity of variables with 'Churn'", x = "Variable", y = "Score") + 
+  coord_flip() + 
+  theme(axis.text.y = element_text(size=44)) +
+  scale_fill_gradient2(low = "green", 
+                       high = "red", 
+                       midpoint = median(x$Freq)) +
+  theme_classic()
+
+```
+
+
+***
+
+<p style='padding: 20px;'>
+There are two things we need to do before the dataset is ready for association rule mining:
+
+1. There are two continuous variables whose relationship to customer churn we are interested in: `MonthlyCharges` and `Tenure`. We will ignore the TotalCharges variable here, as it is a product of these two. To make use of them, we need to **discretize** them into categorical variables. However, simply dividing up the values into equal sized bins would almost definitely result in information loss. To obtain the most informative binning, we will use a **supervised discretization** function from the `arulesCBA` package, which identifies bin breaks that retain the most predictive power with respect to the target variable that we are interested in, `Churn`.
+2. The `arules` package requires the input dataset to be in the **transaction** format. In our case, this means that each row corresponds to a single customer, listing all their personal characteristics and purchasing behaviours as comma-separated items.
+
+Once all of this is done, we can look at the prevalence of each of these characteristics or behaviours is amongst the customers. For example, month-to-month contracts and paperless billing are the most common.
+</p>
+
+<details>
+<summary>General workflow</summary>
+```r
+## Import libraries
+library(arulesCBA)
+library(arules)
+library(ggplot2)
+
+## Discretize "MonthlyCharges" with respect to "Churn"/"No Churn" 
+df$Binned_MonthlyCharges <- discretizeDF.supervised(Churn ~ ., 
+                                                    df[, c('MonthlyCharges', 'Churn')], 
+                                                    method='mdlp')$MonthlyCharges
+
+## Discretize "Tenure" with respect to "Churn"/"No Churn" 
+df$Binned_Tenure <- discretizeDF.supervised(Churn ~ ., 
+                                            df[, c('Tenure', 'Churn')], 
+                                            method='mdlp')$Tenure
+
+## Convert dataframe to transaction format
+tData <- read.transactions(df, 
+                           format = "basket", 
+                           sep = ",", 
+                           header=TRUE)
+
+## Get item frequency
+x <- data.frame(sort(table(unlist(LIST(tData))), 
+                     decreasing=TRUE))
+
+## Plot
+ggplot(data=x, aes(x=factor(x$Var1), y=x$Freq)) + 
+      geom_col() 
+```
+    
+</details>
+
+
+
+
+### **Generate & filter rules** <br><br> Extract the most informative rules by measures of "interestingness" and statistical significance {data-commentary-width=500}
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+## Import libraries
+library(knitr)
+library(kableExtra)
+
+## Create rules
+assn_rules <- apriori(tData, 
+                 parameter = list(supp = 0.001, 
+                                  conf=0.9,      
+                                  minlen=3,      
+                                  maxlen=5))   
+
+## Filter rules by lift
+filtered_rules <- subset(assn_rules, subset = lift > 1.5)
+
+## Filter out redundant rules
+nonr_rules <- filtered_rules[!is.redundant(filtered_rules)]   
+
+## Filter out statistically insignificant rules
+sig_rules <- nonr_rules[!is.significant(nonr_rules, 
+                                        tData, 
+                                        method = "fisher", 
+                                        adjust = 'bonferroni')]
+
+## Extract rules that have "Churn" as consequent 
+churn_rules <- subset(sig_rules, subset=rhs %pin% 'Churn')
+
+## Convert rules matrix to dataframe
+churn_rules_df <- DATAFRAME(churn_rules, setStart='', setEnd='', separate = TRUE)
+```
+
+```{r}
+write.csv(churn_rules_df, './churn_rules.csv', row.names=FALSE)
+```
+
+
+```{r}
+## Sort the rules by how often they are true, which is measured by "support"
+kable(head(churn_rules_df[order(-churn_rules_df$support),], 20), format='html', escape=F) %>%
+         kable_styling(full_width=T, bootstrap_options = c("striped", "hover"))
+
+```
+
+
+***
+
+The Apriori algorithm is most commonly used for association rule mining. We can set various parameters to limit the number of rules created from the dataset, usually how often the rule is observed (**support**), how often it is true (**confidence**) and the minimum/maximum length of the rule. As an example, let’s generate rules that appear in at least 0.1% of customers, holds true 90% of the time, and contain 3-5 “items”. 
+
+The number of rules obtained at this step will almost certainly be too numerous to provide insights. We can further filter the rules by their **lift**, which is a measure of how much more or less likely the items in a given rule appear together as compared to by chance. Therefore, it is a metric of the importance of a rule. In addition, redundant and statistically insignificant rules should also be removed to leave only the most informative ones. Finally, as we are most interested in customer churn, we can extract *only* the rules that contain "Churn" in the right-hand side.
+
+After all this is done, we can then convert the association rules to a dataframe for easy inspection and take a look. “LHS” and “RHS” refer to items on the left- and right-hand side of each rule, respectively. “Count” gives how many instances, whether it be transactions or customers, in which the rule appears. In our case, the “count” of each rule divided by the total number of customers in the dataset equals its support.
+  
+<details>
+<summary>General workflow</summary>
+```r
+## Import libraries
+library(arules)
+
+## Convert dataframe to transaction format
+tData <- read.transactions(df, 
+                           format = "basket", 
+                           sep = ",", 
+                           header=TRUE)
+
+## Create rules
+rules <- apriori(tData, 
+                 parameter = list(supp = 0.001, 
+                                  conf=0.9,      
+                                  minlen=3,      
+                                  maxlen=5))   
+
+## Filter rules by lift
+filtered_rules <- subset(rules, subset = lift > 1.5)
+
+## Filter out redundant rules
+nonr_rules <- filtered_rules[!is.redundant(filtered_rules)]   
+
+## Filter out statistically insignificant rules
+sig_rules <- nonr_rules[!is.significant(nonr_rules, tData, 
+                                        method = "fisher", 
+                                        adjust = 'bonferroni')]
+
+## Extract rules that have "Churn" as consequent 
+churn_rules <- subset(sig_rules, 
+                      subset=rhs %pin% 'Churn')
+
+## Convert rules matrix to dataframe
+churn_rules_df <- DATAFRAME(churn_rules, 
+                            setStart='', setEnd='', 
+                            separate = TRUE)
+```
+</details>
+
+
+
+
+
+### **Grouped matrix**<br><br> Overview of the association rules {data-commentary-width=550}
+
+```{r}
+## Import libraries
+library(ggplot2)
+library(arulesViz)
+
+## Grouped matrix
+plot(churn_rules, method="grouped", control=list(main=NULL))
+```
+
+
+***
+
+
+The grouped matrix plot provides a birds eye overview of the most informative rules. The antecedents of each rule are grouped in the columns using clustering. Each group is labeled with the "items" that are most prevalent in its antecedent. Balloons in the matrix are used to represent with what consequent the antecedents are connected.
+
+From this plot, we can see that purchasing fiber optic internet service and having a month-to-month contract are associated with higher likelihood of the customer leaving the company. 
+
+However, its utility is limited precisely by how distilled the information is. So, that is where the circular grouped plot comes in, as we will see next.
+  
+<details>
+<summary>General workflow</summary>
+```r
+## Import libraries
+library(arules)
+library(arulesViz)
+
+## Convert dataframe to transaction format
+tData <- read.transactions(df, 
+                           format = "basket", 
+                           sep = ",", 
+                           header=TRUE)
+
+## Create rules
+rules <- apriori(tData, 
+                 parameter = list(supp = 0.001, 
+                                  conf=0.9,      
+                                  minlen=3,      
+                                  maxlen=5))   
+
+## Plot
+plot(rules, method="grouped", 
+     control=list(main=NULL))
+```
+</detail>
+
+
+### **Circular grouped plot** <br><br> More granular summary of the association rules {data-commentary-width=500}
+
+```{r, out.height=25, out.width=25}
+
+subrules <- subset(churn_rules, support>0.0014)
+
+plot(subrules, method="graph", cex=0.9,
+     control=list(main=NULL, layout=igraph::in_circle()))
+
+
+```
+
+***
+
+
+The circular grouped plot provides a more detailed summary of the rules than the grouped matrix, but obviously at the cost of the number of rules that can be visualized before it gets too cluttered.
+
+Looking at customer characteristics and purchasing behaviours that have the most number of arrows stemming from it, we see that customers with short tenures (1-5.5 months), dependents and purchased fiber optic internet service seem to be the most likely to leave the company. This is consistent with what we saw in the grouped matrix plot previously.
+
+These insights can help to inform new marketing campaigns and retention strategies, such as offering discounted year-long contracts to new customers, create family plans, and make the internet service package more competitive.
+  
+<details>
+<summary>General workflow</summary>
+```r
+## Import libraries
+library(arules)
+library(arulesViz)
+
+## Convert dataframe to transaction format
+tData <- read.transactions(df, 
+                           format = "basket", 
+                           sep = ",", 
+                           header=TRUE)
+
+## Create rules
+rules <- apriori(tData, 
+                 parameter = list(supp = 0.001, 
+                                  conf=0.9,      
+                                  minlen=3,      
+                                  maxlen=5))   
+
+## Plot
+plot(rules, method="graph",
+     control=list(main=NULL, 
+                  layout=igraph::in_circle()))
+```
+</detail>
+
+
+
+
+### **Interactive network graph** <br><br> User-friendly filtering and exploration of association rules {data-commentary-width=450}
+
+```{r message=FALSE, warning=FALSE, echo=F, include=FALSE, fig.width=10, fig.height=10}
+x <- plot(churn_rules, method = "graph", 
+     control=list(main=NULL),  engine = "htmlwidget")
+
+htmlwidgets::saveWidget(x, "./arules.html", selfcontained = FALSE)
+```
+
+```{r}
+x
+```
+
+***
+
+
+With a handy dropdown menu, this plot allows interactive exploration of rules that contain specific items in this antecedent. 
+
+In addition, the zoom-in/out, drag-and-drop and highlight-upon-hovering capabilities make it easy to zero in on something of interest. Feel free to play around!
+
+If you want to explore the rules further, go to the "Shiny app" tab where you will find the interactive app provided by the `arules` package. As it allows *on-the-fly* filtering and custom visualizations of the rules, the app can serve as a light-weight recommender engine. 
+  
+<details>
+<summary>General workflow</summary>
+```r
+## Import libraries
+library(arules)
+library(arulesViz)
+
+## Convert dataframe to transaction format
+tData <- read.transactions(df, 
+                           format = "basket", 
+                           sep = ",", 
+                           header=TRUE)
+
+## Create rules
+rules <- apriori(tData, 
+                 parameter = list(supp = 0.001, 
+                                  conf=0.9,      
+                                  minlen=3,      
+                                  maxlen=5))   
+
+## Plot
+plot(churn_rules, method = "graph", 
+     control=list(main=NULL),  
+     engine = "htmlwidget")
+```
+</detail>
+
+
+
+
+Shiny app
+=========================================
+
+```{r, cache=FALSE}
+library(shiny)
+library(shinythemes)
+library(DT)
+library(data.table)
+library(arules)
+library(arulesViz)
+library(plotly)
+library(plyr)
+library(dplyr)
+
+## Import data that has been cleaned up
+df <-read.csv("https://github.com/nchelaru/data-prep/raw/master/telco_cleaned_yes_no.csv")
+
+## Discretize "MonthlyCharges" with respect to "Churn"/"No Churn" label and assign to new column in dataframe
+df$Binned_MonthlyCharges <- discretizeDF.supervised(Churn ~ ., df[, c('MonthlyCharges', 'Churn')], method='mdlp')$MonthlyCharges
+
+## Rename the levels based on knowledge of min/max monthly charges
+df$Binned_MonthlyCharges = revalue(df$Binned_MonthlyCharges, 
+                                   c("[-Inf,29.4)"="$0-29.4", 
+                                     "[29.4,56)"="$29.4-56", 
+                                     "[56,68.8)"="$56-68.8", 
+                                     "[68.8,107)"="$68.8-107", 
+                                     "[107, Inf]" = "$107-118.75"))
+
+## Discretize "Tenure" with respect to "Churn"/"No Churn" label and assign to new column in dataframe
+df$Binned_Tenure <- discretizeDF.supervised(Churn ~ ., 
+                                            df[, c('Tenure', 'Churn')], 
+                                            method='mdlp')$Tenure
+
+## Rename the levels based on knowledge of min/max tenures
+df$Binned_Tenure = revalue(df$Binned_Tenure, 
+                           c("[-Inf,1.5)"="1-1.5m", 
+                             "[1.5,5.5)"="1.5-5.5m",
+                             "[5.5,17.5)"="5.5-17.5m",
+                             "[17.5,43.5)"="17.5-43.5m",
+                             "[43.5,59.5)"="43.5-59.5m",
+                             "[59.5,70.5)"="59.5-70.5m",
+                             "[70.5, Inf]"="70.5-72m"))
+
+## Replace "No"s with empty values
+df[df=="No"]<-NA
+
+df[] <- lapply(df, function(x) levels(x)[x])
+
+## Replace "Yes"s with the column name
+w <- which(df == "Yes", arr.ind = TRUE)
+
+df[w] <- names(df)[w[,"col"]]
+
+## Output to CSV
+write.csv(df, './final_df.csv', row.names=FALSE)
+
+## Convert dataframe to transaction format
+tData <- read.transactions('./final_df.csv', 
+                           format = "basket", sep = ",", 
+                           header=TRUE)
+
+## Create rules
+quiet <- function(x) { 
+  sink(tempfile()) 
+  on.exit(sink()) 
+  invisible(force(x)) 
+} 
+
+assn_rules <- quiet(apriori(tData, 
+                 parameter = list(supp = 0.001, 
+                                  conf=0.9,      
+                                  minlen=3,      
+                                  maxlen=5)))   
+
+## Filter rules by lift
+filtered_rules <- subset(assn_rules, subset = lift > 1.5)
+
+## Filter out redundant rules
+nonr_rules <- filtered_rules[!is.redundant(filtered_rules)]   
+
+## Filter out statistically insignificant rules
+sig_rules <- nonr_rules[!is.significant(nonr_rules, 
+                                        tData, 
+                                        method = "fisher", 
+                                        adjust = 'bonferroni')]
+ 
+x <- sig_rules
+
+parameter = NULL
+
+### rounding helpers
+roundUp <- function(x, digits = 3) round(x+.5*10^-digits, digits)
+roundDown <- function(x, digits = 3) round(x-.5*10^-digits, digits)
+
+### dataset can be rules or transactions
+dataset <- x
+aparameter <- as(parameter,'APparameter')
+supp <- aparameter@support
+conf <- aparameter@confidence
+
+### make sure we have transactions or rules
+if(is(dataset, "data.frame")) {
+    dataset <- discretizeDF(dataset)
+    dataset <- as(dataset, "transactions")
+}
+
+### default measures to use
+xIndexCached <- "support"
+yIndexCached <- "confidence"
+zIndexCached <- "lift"
+
+### js cannot handle very large arrays
+itemLabels <- itemLabels(dataset)
+if(length(itemLabels) > 10000)
+    itemLabels <- list('Disabled because of excessive number of items (>10,000)'= c(""))
+
+if(is(dataset, "rules")) {
+    if(length(dataset) < 1) stop("Zero rules provided!")
+    
+    minSupp <- roundDown(min(quality(dataset)$support), 3)
+    maxSupp <- roundUp(max(quality(dataset)$support), 3)
+    minConf <- roundDown(min(quality(dataset)$confidence), 3)
+    maxConf <- roundUp(max(quality(dataset)$confidence), 3)
+    minLift <- floor(min(quality(dataset)$lift))
+    maxLift <- ceiling(max(quality(dataset)$lift))
+    
+    supp <- minSupp
+    conf <- minConf
+    lift <- minLift
+} else {
+    ### transactions
+    minSupp <- 0
+    maxSupp <- 1
+    minConf <- 0
+    maxConf <- 1
+    minLift <- 0
+    maxLift <- 25
+    lift <- 0
+    
+}
+
+## create Shiny UI and server code
+shiny::shinyApp(ui = shiny::shinyUI(
+    
+    shiny::fluidPage(
+        theme = shinythemes::shinytheme("journal"),
+        
+        title = "Association Rule Explorer",
+        shiny::titlePanel("Association Rule Explorer"),
+        
+        shiny::sidebarLayout(
+            shiny::sidebarPanel(
+                
+                shiny::htmlOutput('numRulesOutput'),
+                shiny::br(),
+                
+                shiny::sliderInput("supp", "Minimum Support:", min = minSupp, max = maxSupp,
+                                   value = supp , step = (maxSupp-minSupp)/100, sep =""),
+                shiny::sliderInput("conf", "Minimum Confidence:", min = minConf, max = maxConf,
+                                   value = conf , step =  (maxConf-minConf)/1000, sep = ""),
+                shiny::sliderInput("lift", "Minimum Lift:", min = minLift, max = maxLift,
+                                   value = lift , step =  (maxLift-minLift)/1000, sep = ""),
+                shiny::sliderInput("length", "Rule length (from-to):", min = 2, max = 20,
+                                   value = c(2,10) , step =  1, sep = ""),
+                
+                #shiny::br(),
+                shiny::em(shiny::HTML('Filter rules by items:')),
+                #shiny::br(),
+                shiny::selectInput('colsType',NULL,c('Exclude items:'='rem','Require items:'='req')),
+                shiny::uiOutput("choose_columns"),
+                shiny::selectInput('colsLHSType',NULL,c('Exclude items from LHS:'='rem','Require items in LHS:'='req')),
+                shiny::uiOutput("choose_lhs"),
+                shiny::selectInput('colsRHSType',NULL,c('Exclude items from RHS:'='rem','Require items in RHS:'='req')),
+                shiny::uiOutput("choose_rhs")
+            ),
+            
+            shiny::mainPanel(
+                shiny::tabsetPanel(id='tabs',
+                                   
+                                   shiny::tabPanel('Data Table', value='datatable',
+                                                   shiny::br(),
+                                                   DT::dataTableOutput("rulesDataTable")
+                                   ),
+                                   
+                                   shiny::tabPanel('Scatter', value='scatter',
+                                                   shiny::wellPanel(
+                                                       shiny::fluidRow(
+                                                           shiny::column(3, shiny::uiOutput("xAxisSelectInput")),
+                                                           shiny::column(3, shiny::uiOutput("yAxisSelectInput")),
+                                                           shiny::column(3, shiny::uiOutput("cAxisSelectInput")),
+                                                           shiny::column(3, shiny::sliderInput("max_scatter", "Top rules shown (keep below 500):",
+                                                                                               min = 1, max = length(x), value = min(100, length(x)), step = 1, sep = ""))
+                                                       )),
+                                                   plotly::plotlyOutput("scatterPlot", width='100%', height='100%')
+                                   ),
+                                   
+                                   # shiny::tabPanel('Matrix', value='matrix',
+                                   #                 shiny::wellPanel(
+                                   #                     shiny::fluidRow(
+                                   #                         shiny::column(6, shiny::uiOutput("cAxisSelectInput_matrix")),
+                                   #                         shiny::column(6, shiny::sliderInput("max_matrix", "Top rules shown (keep below 500):",
+                                   #                                                             min = 1, max = length(x), value = min(100, length(x)), step = 1, sep = ""))
+                                   #                     )),
+                                   #                 
+                                   #                 plotly::plotlyOutput("matrixPlot", width='100%', height='100%')
+                                   # ),
+                                   
+                                   shiny::tabPanel('Grouped', value='grouped',
+                                                   shiny::wellPanel(
+                                                       shiny::fluidRow(
+                                                           shiny::column(6, shiny::uiOutput("kSelectInput")),
+                                                           shiny::column(6, shiny::uiOutput("cAxisSelectInput_grouped"))
+                                                       )),
+                                                   shiny::plotOutput("groupedPlot")
+                                                   # size is specified in renderPlot
+                                                   #, width='80%', height='50%')
+                                   ),
+                                   
+                                   shiny::tabPanel('Graph', value='graph',
+                                                   shiny::wellPanel(
+                                                       shiny::fluidRow(
+                                                           shiny::column(6, shiny::uiOutput("cAxisSelectInput_graph")),
+                                                           shiny::column(6, shiny::sliderInput("max_graph", "Top rules shown (keep below 500):",
+                                                                                               min = 1, max = length(x), value = min(100, length(x)), step = 1, sep = ""))
+                                                       )),
+                                                   
+                                                   visNetwork::visNetworkOutput("graphPlot", width='100%', height='800px')
+                                   ),
+                                   
+                                   shiny::tabPanel('Export', value='export',
+                                                   shiny::br(),
+                                                   shiny::downloadButton('rules.csv', 'Export rules (CSV)'))
+                )
+            )
+        )
+    )),
+    
+    
+    server = function(input, output, session) {
+        
+        output$numRulesOutput <- shiny::renderUI({
+            shiny::em(shiny::HTML(paste('Selected rules: ', length(rules()))))
+        })
+        
+        output$kSelectInput <- shiny::renderUI({
+            shiny::sliderInput('k', label='Choose # of rule clusters', min=1, max=50, step=1, value=15)
+        })
+        
+        output$xAxisSelectInput <- shiny::renderUI({
+            shiny::selectInput("xAxis","X Axis:", colnames(quality(rules())), selected=xIndexCached)
+        })
+        
+        output$yAxisSelectInput <- shiny::renderUI({
+            shiny::selectInput("yAxis","Y Axis:", colnames(quality(rules())), selected=yIndexCached)
+        })
+        
+        output$cAxisSelectInput <- shiny::renderUI({
+            shiny::selectInput("cAxis","Shading:", colnames(quality(rules())), selected=zIndexCached)
+        })
+        
+        output$cAxisSelectInput_matrix <- shiny::renderUI({
+            shiny::selectInput("cAxis_matrix","Shading:", colnames(quality(rules())), selected=zIndexCached)
+        })
+        
+        output$cAxisSelectInput_grouped <- shiny::renderUI({
+            shiny::selectInput("cAxis_grouped","Shading:", colnames(quality(rules())), selected=zIndexCached)
+        })
+        
+        output$cAxisSelectInput_graph <- shiny::renderUI({
+            shiny::selectInput("cAxis_graph","Shading:", colnames(quality(rules())), selected=zIndexCached)
+        })
+        
+        output$choose_columns <- shiny::renderUI({
+            shiny::selectizeInput('cols', NULL, itemLabels, multiple = TRUE)
+        })
+        
+        output$choose_lhs <- shiny::renderUI({
+            shiny::selectizeInput('colsLHS', NULL, itemLabels, multiple = TRUE)
+        })
+        
+        output$choose_rhs <- shiny::renderUI({
+            shiny::selectizeInput('colsRHS', NULL, itemLabels, multiple = TRUE)
+        })
+        
+        ## caching data
+        cachedRules <- NULL
+        cachedSupp <- supp
+        cachedConf <- conf
+        cachedLift <- lift
+        cachedMinL <- minLift
+        cachedMaxL <- maxLift
+        
+        if(is(dataset, "rules")) {
+            cachedRules <- dataset
+            cachedSupp <<- info(dataset)$support
+            cachedConf <<- info(dataset)$confidence
+            cachedLift <<- min(quality(dataset)$lift)
+            cachedMinL <<- min(size(dataset))
+            cachedMaxL <<- max(size(dataset))
+        }
+        
+        ### remine rules if necessary dataset is transactions!
+        remineRules <- shiny::reactive({
+            
+            ### use a minimum of 1 absolute support!
+            supp <- input$supp
+            if(supp == 0) supp <- 1/length(dataset)
+            
+            rules <- apriori(dataset, parameter = list(
+                support = as.numeric(supp),
+                confidence = as.numeric(input$conf),
+                minlen = input$length[1],
+                maxlen = input$length[2]),
+                control = list(verbose = TRUE))
+            quality(rules) <- interestMeasure(rules, transactions = dataset)
+            
+            message("Remined ", length(rules), " rules.")
+            
+            cachedRules <<- rules
+            cachedSupp <<- input$supp
+            cachedConf <<- input$conf
+            cachedLift <<- input$lift
+            cachedMinL <<- input$length[1]
+            cachedMaxL <<- input$length[2]
+        })
+        
+        ### handle warning for too low support
+        override <- shiny::reactiveVal(FALSE)
+        
+        shiny::observeEvent(input$cancel, {
+            shiny::removeModal()
+            # reset the slider (Note this does not change input$supp!)
+            shiny::updateSliderInput(session, "supp", value = cachedSupp)
+        })
+        
+        shiny::observeEvent(input$continue, {
+            shiny::removeModal()
+            override(TRUE)
+        })
+        
+        rules <- shiny::reactive({
+            ### recalculate rules?
+            
+            if(is(dataset, 'transactions')) {
+                
+                # check for low minimum support first
+                if(input$supp*length(dataset) > 10 || override()) {
+                    
+                    if(is.null(cachedRules)) remineRules()
+                    if((input$supp < cachedSupp) || input$conf < cachedConf) remineRules()
+                    if(input$length[1] < cachedMinL || input$length[1] > cachedMaxL) remineRules()
+                    
+                } else {
+                    shiny::showModal(shiny::modalDialog(
+                        title='Warning',
+                        'Very low minimum support! Too low values can result in long wait times and memory issues.',
+                        footer=shiny::tagList(
+                            shiny::actionButton('cancel','cancel'),
+                            shiny::actionButton('continue','proceed')
+                        )
+                    ))
+                }
+            }
+            
+            ar <- cachedRules
+            
+            ### filter rules
+            if(input$supp > cachedSupp) {
+                ar <- subset(ar, subset = support > input$supp)
+            }
+            
+            if(input$conf > cachedConf) {
+                ar <- subset(ar, subset = quality(ar)$confidence > input$conf)
+            }
+            
+            if(input$lift > cachedLift) {
+                ar <- subset(ar, subset= lift > input$lift)
+            }
+            
+            if(input$length[1] > cachedMinL) {
+                ar <- ar[size(ar) >= input$length[1]]
+            }
+            
+            if(input$length[2] < cachedMaxL) {
+                ar <- ar[size(ar) <= input$length[2]]
+            }
+            
+            if(input$colsType == 'rem' && length(input$cols) > 0) {
+                ar <- subset(ar, subset=!(items %in% input$cols))
+            }
+            
+            if(input$colsType == 'req' && length(input$cols) > 0) {
+                ar <- subset(ar, subset=items %in% input$cols)
+            }
+            
+            if(input$colsLHSType == 'rem' && length(input$colsLHS) > 0) {
+                ar <- subset(ar, subset=!(lhs %in% input$colsLHS))
+            }
+            
+            if(input$colsLHSType == 'req' && length(input$colsLHS) > 0) {
+                ar <- subset(ar, subset=lhs %in% input$colsLHS)
+            }
+            
+            if(input$colsRHSType == 'rem' && length(input$colsRHS) > 0) {
+                ar <- subset(ar, subset=!(rhs %in% input$colsRHS))
+            }
+            
+            if(input$colsRHSType == 'req' && length(input$colsRHS) > 0) {
+                ar <- subset(ar, subset=rhs %in% input$colsRHS)
+            }
+            
+            shiny::validate()
+            
+            ar
+        })
+        
+        # remember settings for other plots
+        shiny::observe({ shiny::req(input$xAxis); xIndexCached <<- input$xAxis })
+        shiny::observe({ shiny::req(input$yAxis); yIndexCached <<- input$yAxis })
+        shiny::observe({ shiny::req(input$cAxis); zIndexCached <<- input$cAxis })
+        shiny::observe({ shiny::req(input$cAxis_matrix); zIndexCached <<- input$cAxis_matrix })
+        shiny::observe({ shiny::req(input$cAxis_grouped); zIndexCached <<- input$cAxis_grouped })
+        shiny::observe({ shiny::req(input$cAxis_graph); zIndexCached <<- input$cAxis_graph })
+        
+        
+        # Present errors nicely to the user
+        handleErrors <- shiny::reactive({
+            shiny::validate(
+                shiny::need(length(rules())>0, 'No rules to visualize! Decrease support, confidence or lift.')
+            )
+        })
+        
+        
+        ## Grouped Plot #########################
+        output$groupedPlot <- shiny::renderPlot({
+            shiny::req(input$cAxis_grouped, input$k)
+            handleErrors()
+            
+            plot(rules(), method='graph', shading = input$cAxis_grouped, control=list(k=input$k, layout=igraph::in_circle()))
+        }, height=800, width=1200)
+        
+        
+        ## Circular plot ##########################
+        output$graphPlot <- visNetwork::renderVisNetwork({
+            shiny::req(input$cAxis_graph, input$max_graph)
+            handleErrors()
+            
+            plt <- plot(rules(), method='graph', shading = input$cAxis_graph, engine='htmlwidget',
+                        control = list(max=input$max_graph))
+            plt$sizingPolicy <- htmlwidgets::sizingPolicy(
+                viewer.paneHeight=1000,
+                browser.defaultHeight=1000,
+                knitr.defaultHeight=1000,
+                defaultHeight=1000,defaultWidth=1000,
+                browser.fill=TRUE
+            )
+            plt$height <- 1000
+            plt$x$height <- 1000
+            plt
+        })
+        
+        
+        ## Scatter Plot ##########################
+        output$scatterPlot <- plotly::renderPlotly({
+            shiny::req(input$xAxis, input$yAxis, input$cAxis, input$max_scatter)
+            handleErrors()
+            plot(rules(), method = 'scatterplot',
+                 measure=c(input$xAxis, input$yAxis), shading = input$cAxis, engine = 'htmlwidget',
+                 control = list(max=input$max_scatter))
+        })
+        
+        
+        ## Matrix Plot ###################
+        output$matrixPlot <- plotly::renderPlotly({
+            shiny::req(input$cAxis_matrix, input$max_matrix)
+            handleErrors()
+            plot(rules(), method="graph", shading = input$cAxis_matrix, engine = 'htmlwidget',
+                 control=list(layout=igraph::in_circle()))
+        })
+        
+        ## Data Table ##########################
+        output$rulesDataTable <- DT::renderDataTable({
+            handleErrors()
+            inspectDT(rules())
+        }
+        )
+        
+        ## Export ########################
+        output$rules.csv <- shiny::downloadHandler(
+            filename = 'rules.csv',
+            content = function(file) {
+                write.csv(as(rules(), "data.frame"), file)
+            }
+        )
+        
+        
+    }
+)
+```
+ 
+ 
+
+
+
+Session info
+=========================================
+
+Column 
+--------------------------------------------
+```{r}
+sessionInfo()
+```
+
+
+
