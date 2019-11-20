@@ -9,7 +9,7 @@ library(ggplot2)
 library(arulesViz)
 library(shinyjs)
 library(shinyBS)
-library(tippy)
+
 
 welcome_msg <- HTML('<center><h3>Welcome to an Intelligence Refinery data science microlearning series!</h3></center>
                    
@@ -25,7 +25,7 @@ welcome_msg <- HTML('<center><h3>Welcome to an Intelligence Refinery data scienc
                     
                     <br><br>
                     
-                    You can navigate through sections of this tutorial by <i>double</i> clicking on the tabs in the sidebar. 
+                    You can navigate through sections of this tutorial by clicking on the tabs in the sidebar. 
                     
                     <br><br>
                     
@@ -232,7 +232,7 @@ about_msg <- HTML('<div style="font-size:18px; margin: 0px 15px 15px 15px;"><p><
                   </div>')
 
 iframe_test <- HTML('<iframe src="https://raindrop.io/collection/8841871" 
-                    style="border:0px #ffffff none;" name="myiFrame" scrolling="no" 
+                    style="border:0px #ffffff none;" name="myiFrame" scrolling="yes" 
                     frameborder="1" marginheight="0px" marginwidth="0px" height="950px" 
                     width="100%" allowfullscreen></iframe>')
 
@@ -240,56 +240,54 @@ iframe_test <- HTML('<iframe src="https://raindrop.io/collection/8841871"
 shinyApp(
   ui = gentelellaPageCustom(
     title = "Association rule mining",
+    navbar = gentelellaNavbar(
+      navbarItems = NULL,
+      style='height:55px;'
+    ),
     sidebar = gentelellaSidebar(
-      site_title = HTML(paste('<img src="https://i.ibb.co/LzjJ6LL/logo-blue.png" alt="IntelRefinery" height=42>', "<font size=3>Intelligence Refinery</font>")),
-      uiOutput("profile"),
+      site_title = HTML(paste('<img src="https://i.ibb.co/LzjJ6LL/logo-blue.png" alt="IntelRefinery" height=42>',
+                              "<font size=3>Intelligence Refinery</font>")),
+      #uiOutput("profile"),
+      br(),
+      sidebarDate(),
+      hr(),
+      
       sidebarMenu(
         sidebarItem(
           HTML("<font size=4>Getting started</font>"),
           tabName = "intro", 
           icon = tags$i(class = "far fa-flag"), 
           badgeName = "new",
-          badgeStatus = "danger",
-          class='tippy'
+          badgeStatus = "danger"
         ),
         sidebarItem(
           HTML("<font size=4>Data prep</font>"),
           tabName = "data_proc", 
           icon = tags$i(class = "fas fa-chart-bar"), 
           badgeName = "new",
-          badgeStatus = "danger",
-          class="tippy"
+          badgeStatus = "danger"
         ),
         sidebarItem(
           HTML("<font size=4>Rule mining</font>"),
           tabName = "assn_rules", 
-          icon = tags$i(class = "fas fa-list-ul"),
-          class="tippy"
+          icon = tags$i(class = "fas fa-list-ul")
         ),
         sidebarItem(
           HTML("<font size=4>Explore</font>"),
           tabName = "app", 
-          icon = tags$i(class = "fas fa-project-diagram"),
-          class="tippy"
+          icon = tags$i(class = "fas fa-project-diagram")
         ),
         sidebarItem(
           HTML("<font size=4>About</font>"),
           tabName = "about", 
-          icon = tags$i(class = "fas fa-question"),
-          class="tippy"
-        ),
-        tippy_class("tippy", content="<h4>Double click me!</h4>", allowHTML=TRUE,
-                    duration = 1000, 
-                    placement = "top",
-                    theme = "light")
+          icon = tags$i(class = "fas fa-question")
+        )
       )
     ),
     body = gentelellaBody(
       tabItems(
         tabItem(
           tabName = 'intro',
-          br(),
-          br(),
           bsModal(id = 'startupModal', title = NULL, trigger = '',
                   size = 'large', welcome_msg),
           fluidRow(
@@ -327,8 +325,6 @@ shinyApp(
         ),
         
         tabItem(tabName = 'data_proc',
-                br(),
-                br(),
                 fluidRow(
                   column(
                     width = 7,
@@ -361,7 +357,6 @@ shinyApp(
                 ))), 
         
         tabItem(tabName = "assn_rules",
-                br(),
                 fluidRow(
                   column(width = 6,
                          tabSetPanel(
@@ -411,7 +406,6 @@ shinyApp(
         
         tabItem(
           tabName = "app",
-          br(), 
           fluidRow(
             column(
               width = 12,
@@ -423,7 +417,6 @@ shinyApp(
         
         tabItem(
           tabName = "about",
-          br(), 
           fluidRow(
                   column(
                     width=8,
@@ -476,14 +469,14 @@ shinyApp(
                                                             scrollX = TRUE,
                                                             scrollY = TRUE)) 
     
+     
+
     output$profile <- renderUI({
       sidebarProfile(
         name = input$name,
         img = "https://image.flaticon.com/icons/svg/236/236831.svg"
       )
     })
-
-
     
  
   },

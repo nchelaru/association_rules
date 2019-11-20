@@ -5,9 +5,9 @@ account: nancy-chelaru-centea
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1463638
-bundleId: 2595809
+bundleId: 2602380
 url: https://nancy-chelaru-centea.shinyapps.io/assn_rules_mining/
-when: 1574024178.49667
+when: 1574215226.09202
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: association_rule_mining.Rmd|er.R|logo_blue.png|logo_full.png|logo_white.png|logo.png|Rplot.png|template.R|Test-app.R
