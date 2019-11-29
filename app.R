@@ -202,7 +202,8 @@ interpretation <- HTML('After all this is done, we can then convert the associat
 about_msg <- HTML('<div style="font-size:18px; margin: 0px 15px 15px 15px;"><p><img style="height:150px; float: left; padding: 10px 15px 15px 0px;" src="https://octodex.github.com/images/andycat.jpg" alt="avatar"> 
                   This microlearning series is one of several that I have created for 
                   <a href="https://www.intelligencerefinery.io"><b>Intelligence Refinery</b></a>, 
-                  a knowledge repository for all things data science and software development that I co-curate with Mihai Chelaru. 
+                  a knowledge repository for all things data science and software development that I co-curate with Mihai Chelaru. You can find the 
+                  source code and related files for this app <a href="https://github.com/nchelaru/association_rules"><i>here</i></a>.  
                   
                   <br><br>
                   
