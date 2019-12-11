@@ -10,6 +10,7 @@ library(arulesViz)
 library(shinyjs)
 library(shinyBS)
 
+ 
 
 welcome_msg <- HTML('<center><h3>Welcome to an Intelligence Refinery data science microlearning series!</h3></center>
                    
@@ -41,12 +42,10 @@ what <- HTML('<div style="font-size:17px; margin:10px;">
               
               <b>Association rule mining</b> is an approach to discovering patterns of co-occurrence 
               in a (large) dataset, by identifying entities that frequently appear together in a group. 
-              As an <i>unsupervised</i> learning technique, association rule mining can be used to identify novel
-              patterns/relationships amongst entities in a large set of data.
               
               <br><br>
               
-              <center><img src="mind_map.png" style="height:200px;"></center>
+              <center><img src="mind_map.png" style="width:45%;"></center>
               
               <br><br>
               
@@ -109,12 +108,12 @@ when <- HTML('<div style="font-size:17px; margin:10px;">Some <a href="https://ww
              
              <br>
              
-             <center><img src="applications.png" style="height:200px;"></center>
+             <center><img src="applications.png" style="width:80%;"></center>
              
              
              ')
 
-data_prep <- HTML("<div style='margin: 10px 15px 10px 15px;; font-size:20px;'>
+data_prep <- HTML("<div style='margin: 10px 15px 10px 15px;; font-size:18px;'>
                     In this microlearning series, we will perform association rule mining on the 
                   <a href='https://developer.ibm.com/patterns/predict-customer-churn-using-watson-studio-and-jupyter-notebooks/'><link>IBM Telco customer churn dataset</link></a>, 
                   to identify customer characteristics and purchasing behaviours that tend to appear together, 
@@ -152,7 +151,7 @@ data_prep <- HTML("<div style='margin: 10px 15px 10px 15px;; font-size:20px;'>
 
 prep_code <- HTML('<div style="margin: 20px;"><script src="https://gist.github.com/nchelaru/7119cad617161ae209cddd64f7c28ac9.js"></script></div>')
 
-rule_mining <- HTML("<div style='font-size: 20px; margin: 15px;'>
+rule_mining <- HTML("<div style='font-size: 17px; margin: 10px;'>
                       The Apriori algorithm is most commonly used for association rule mining, which will also be used in this example. 
                       We can set various parameters to limit the number of rules created from the dataset, 
                       usually how often the rule is observed (<b>support</b>), how often it is true (<b>confidence</b>) 
@@ -164,21 +163,20 @@ rule_mining <- HTML("<div style='font-size: 20px; margin: 15px;'>
                       Nevertheless, the number of rules obtained at this step will almost certainly be too numerous to provide insights. 
                       We can further filter the rules by several criteria:
                       
-                      <ul style='list-style-type:circle; font-size: 20px;'>
-                        <li style='font-size: 20px;'><b>Lift</b></li>
+                      <ul style='list-style-type:circle; font-size: 18px;'>
+                        <li style='font-size: 18px;'><b>Lift</b></li>
                           <ul style='list-style-type:disc;'>
-                            <li style='font-size: 20px;'> A measure of how much more or less likely the items in a given rule appear together as compared to by chance. </li>
-                            <li style='font-size: 20px;'> Therefore, it is a metric of the <i>importance</i> of a rule. </li>
+                            <li style='font-size: 18px;'> A measure of how much more or less likely the items in a given rule appear together as compared to by chance. </li>
+                            <li style='font-size: 18px;'> Therefore, it is a metric of the <i>importance</i> of a rule. </li>
                           </ul>
-                        <li style='font-size: 20px;'><b>Redundance and statistical significance</b></li>
-                           <ul style='list-style-type:disc; font-size: 20px;'>
-                            <li style='font-size: 20px;'> A rule is considered to be redundant if a more general rules with the same or a higher confidence exists</li>
-                            <li style='font-size: 20px;'> Fisher's exact test with multiple comparisons correct is used to identify rules where the association between 
+                        <li style='font-size: 18px;'><b>Redundance and statistical significance</b></li>
+                           <ul style='list-style-type:disc; font-size: 18px;'>
+                            <li style='font-size: 18px;'> Fisher's exact test with multiple comparisons correct is used to identify rules where the association between 
                             items on the left-hand (LHS) and right-hand side (RHS) is statistically significant</li> 
                            </ul>
-                        <li style='font-size: 20px;'><b>Items of interest</b></li>
-                           <ul style='list-style-type:disc; font-size: 20px;'>
-                            <li style='font-size: 20px;'>As in this example we are most interested in characteristics that are associated with customer churn, 
+                        <li style='font-size: 18px;'><b>Items of interest</b></li>
+                           <ul style='list-style-type:disc; font-size: 18px;'>
+                            <li style='font-size: 18px;'>As in this example we are most interested in characteristics that are associated with customer churn, 
                             we can extract <b>only</b> the rules that contain <code>Churn</code> in the RHS.</li>
                           </ul>
                       </ul>
@@ -215,10 +213,12 @@ about_msg <- HTML('<div style="font-size:18px; margin: 0px 15px 15px 15px;"><p><
                   <br><br>
                   
                   On the left, you can find other data science microlearning series and fun hobby projects that I have cooked up. 
-                  I would love to hear any comments or suggestions that you may have. 
-                  <br><br>
+                  I would love to hear any comments or suggestions that you may have.  
                   
+                  <br><br>
+  
                   Hope that you have enjoyed your time here! <i class="fas fa-smile"></i>
+                  
                   </p>
                   
                   <br><hr><br>
@@ -227,7 +227,7 @@ about_msg <- HTML('<div style="font-size:18px; margin: 0px 15px 15px 15px;"><p><
                   <br><br>
                   <center><a href="mailto:nancy.chelaru@gmail.com"><i class="fas fa-envelope" style="padding:10px;"></i></a>
                   <a href="https://www.intelligencerefinery.io/contact/"><i class="fas fa-globe" style="padding:10px;"></i></i></a>
-                  <a href="https://github.com/nchelaru?tab=repositories"><i class="fab fa-github-alt" style="padding:10px;"></i></a>
+                  <a href="https://github.com/nchelaru/association_rules"><i class="fab fa-github-alt" style="padding:10px;"></i></a>
                   <a href="https://twitter.com/n_chelaru"><i class="fab fa-twitter" style="padding:10px;"></i></a></center>
 
                   </div>')
@@ -291,19 +291,20 @@ shinyApp(
           tabName = 'intro',
           bsModal(id = 'startupModal', title = NULL, trigger = '',
                   size = 'large', welcome_msg),
-          fluidRow(
+          fluidPage(
+            fluidRow(
             column(width=5,
-                   box(what, width = 12, height = 870, title = HTML("<font size=5>What is it?</font>"),
+                   box(what, width = 12, height=940, title = HTML("<font size=5>What is it?</font>"),
                        subtitle = NULL, collapsible = FALSE, closable = FALSE,
                        dropdownMenu = NULL)
                    ),
             column(width=4,
-                   box(when, width = 12, height = 870, title = HTML("<font size=5>When to use it?</font>"),
+                   box(when, width = 12, height=940, title = HTML("<font size=5>When to use it?</font>"),
                        subtitle = NULL, collapsible = FALSE, closable = FALSE,
                        dropdownMenu = NULL)
                    ),
             column(width=3,
-                   box(HTML('<center><a href="https://www.intelligencerefinery.io"><img src="resources.png" style="margin: 10px; height:120px;"></a></center>
+                   box(HTML('<center><a href="https://www.intelligencerefinery.io"><img src="resources.png" style="margin: 10px; width:60%"></a></center>
                             <p style="font-size:17px; margin:10px;">If you want more details, we have found some great introductions to association rule mining:</p><br>'),
                      activityList(
                        activityItem(HTML("<font size=2>Data Mining with R</font>"), 
@@ -319,18 +320,18 @@ shinyApp(
                                     title = "Association rules", img = "https://www.mykootenaynow.com/wp-content/uploads/2016/02/UBC-Logo-425x420.jpg",
                                     url = "https://www.cs.ubc.ca/~schmidtm/Courses/340-F15/L11.pdf")
                      ), 
-                     width = 12, height = 870, title = HTML("<font size=5>Where to learn about it?</font>"), 
+                     width = 12, height=940, title = HTML("<font size=5>Where to learn more?</font>"), 
                      collapsible = FALSE, closable = FALSE, dropdownMenu = NULL)
                    )
-          )
+          ))
         ),
         
         tabItem(tabName = 'data_proc',
                 fluidRow(
                   column(
-                    width = 7,
+                    width = 6,
                     graph_box(
-                      plotOutput("item_freq", height=845),
+                      plotOutput("item_freq", height=810),
                       width = 12, 
                       boxtitle = "Frequency of customer characteristics",
                       subtitle = NULL,
@@ -338,19 +339,19 @@ shinyApp(
                     )
                   ),
                 column(
-                  width = 5,
+                  width = 6,
                   tabSetPanel(
                     id = "tabset1",
                     tabPanel(
                       tabName = "Description",
                       active = TRUE,
-                      box(data_prep, width = 12, height=850, collapsible = FALSE, 
-                          title = 'Prepare and explore data for association rule mining')
+                      box(data_prep, width = 12, height=835, collapsible = FALSE, 
+                          title = 'Prepare and explore data')
                     ),
                     tabPanel(
                       tabName = "Workflow",
                       active = FALSE,
-                      box(prep_code, width = 12, height=850, collapsible = FALSE, 
+                      box(prep_code, width = 12, height=835, collapsible = FALSE, 
                           title = 'General workflow', inlineCSS(list("gist" = "font-size: 18px")))
                     )
                   )
@@ -365,14 +366,14 @@ shinyApp(
                            tabPanel(
                              tabName = "Summary",
                              active = TRUE,
-                             box(rule_mining, width = 12, height=900, collapsible = FALSE, 
-                                 title = 'Creating and refining association rules', inlineCSS(list("li-content" = "font-size: 20px;")))
+                             box(rule_mining, width = 12, height=910, collapsible = FALSE, 
+                                 title = 'Creating and refining association rules', inlineCSS(list("li-content" = "font-size: 18px;")))
                              ),
                            tabPanel(
                              tabName = 'Code',
                              active = FALSE,
-                              box(width=12, height=900, collapsible=FALSE, mining_code, 
-                                  title='General workflow for creating, filtering and visualizing association rules')
+                              box(width=12, height=910, collapsible=FALSE, mining_code, 
+                                  title='General workflow')
                            ))
                            ),
                   column(width = 6,
@@ -382,19 +383,21 @@ shinyApp(
                            tabPanel(
                              tabName = 'Plot',
                              active = FALSE,
-                             box(width=12, height=900, collapsible=FALSE, 
+                             box(width=12, height=910, collapsible=FALSE, 
                                  title='Grouped plot',
                                  HTML(paste('<p style="font-size: 17px; margin:10px;">
-                                            <b>This plot shows the top 14 (in terms of support) non-redundant and statistically significant rules that contain "Churn" in the RHS. 
-                                            <br><br>Each circle represents an association rule that connects LHS and RHS items via arrows, the colour of which is proportional to its lift.</b></p>',
-                                            '<center><img src="circ_plot.png" height="135%"></center>')))
+                                            <b>This plot shows the top 14 (in terms of support) non-redundant and statistically 
+                                            significant rules that contain "Churn" in the RHS. Each circle represents an association 
+                                            rule that connects LHS and RHS items via arrows, the colour of which is proportional to 
+                                            its lift.</b></p>',
+                                            '<center><img src="circ_plot.png" width="87%" height="65%"></center>')))
                              
                            ),
                            tabPanel(
                              tabName = "Table",
                              active = TRUE,
-                             box(width=12, height=900,  collapsible=FALSE, 
-                                 title='Customer characteristics and purchases associated with churn',
+                             box(width=12, height=910,  collapsible=FALSE, 
+                                 title='Customer features associated with churn',
                                  DT::dataTableOutput("churn_rules", height = '76vh')),
                              inlineCSS(list("table" = "font-size: 17px", "h2" = "font-size: 26px", "li"= "font-size: 16px"))
                            )
@@ -420,10 +423,10 @@ shinyApp(
           tabName = "about",
           fluidRow(
                   column(
-                    width=8,
+                    width=7,
                     iframe_test),
                   column(
-                    width=4, 
+                    width=5, 
                     box(about_msg, width=12, height=950, collapsible=FALSE,
                               title="Hi, I'm Nancy Chelaru!")
                     
@@ -466,7 +469,7 @@ shinyApp(
     churn_rules_df <- read.csv('./churn_rules.csv') %>% select(-count)  %>% mutate_if(is.numeric, round, 3) 
 
     output$churn_rules <- DT::renderDataTable(churn_rules_df,
-                                             options = list(pageLength = 15, 
+                                             options = list(pageLength = 10, 
                                                             scrollX = TRUE,
                                                             scrollY = TRUE)) 
     
